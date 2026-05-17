@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { PACKAGES, SERVICE_FEE_HOME, TIME_SLOTS, formatIDR, type PackageId } from "@/lib/bookings";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Flower2, CheckCircle2, MapPin, Home, Calendar as CalendarIcon } from "lucide-react";
+import { Flower2, CheckCircle2, MapPin, Home, Calendar as CalendarIcon, Sparkles, HandHeart, Baby, Quote, Star, ShieldCheck, Clock3 } from "lucide-react";
+import heroImage from "@/assets/spa-hero.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -131,15 +132,139 @@ function BookingPage() {
         <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground transition">Admin</Link>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 pb-16">
-        <div className="text-center py-6">
-          <h1 className="font-display text-4xl md:text-5xl text-foreground leading-tight">
-            Tenangkan tubuh,<br />pesan dalam hitungan menit.
-          </h1>
-          <p className="mt-3 text-muted-foreground">Layanan pijat profesional. Datang ke tempat atau panggilan ke rumah.</p>
-        </div>
+      <main className="max-w-5xl mx-auto px-6 pb-16">
+        {/* HERO */}
+        <section className="grid md:grid-cols-2 gap-8 items-center py-10 md:py-16">
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-card border border-border text-muted-foreground">
+              <Sparkles className="w-3.5 h-3.5 text-primary" /> Terapis bersertifikat
+            </span>
+            <h1 className="mt-4 font-display text-4xl md:text-6xl text-foreground leading-[1.05]">
+              Tenangkan tubuh,<br />
+              <span className="text-primary italic">pulihkan harimu.</span>
+            </h1>
+            <p className="mt-4 text-muted-foreground max-w-md">
+              Layanan pijat profesional untuk Anda dan keluarga. Datang ke tempat kami yang tenang,
+              atau biarkan kami datang ke rumah Anda.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a href="#booking" className="px-5 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition">
+                Pesan Sekarang
+              </a>
+              <a href="#paket" className="px-5 py-3 rounded-lg border border-border bg-card hover:border-primary/40 transition font-medium">
+                Lihat Paket
+              </a>
+            </div>
+            <div className="mt-8 flex gap-6 text-sm">
+              <div><div className="font-display text-2xl text-foreground">500+</div><div className="text-muted-foreground text-xs">Klien puas</div></div>
+              <div><div className="font-display text-2xl text-foreground">4.9<Star className="inline w-4 h-4 ml-0.5 -mt-1 fill-accent text-accent" /></div><div className="text-muted-foreground text-xs">Rata-rata ulasan</div></div>
+              <div><div className="font-display text-2xl text-foreground">5 thn</div><div className="text-muted-foreground text-xs">Pengalaman</div></div>
+            </div>
+          </div>
+          <div className="relative">
+            <img
+              src={heroImage}
+              alt="Terapi pijat dengan eucalyptus dan batu spa"
+              width={1280}
+              height={960}
+              className="rounded-3xl w-full h-auto object-cover aspect-[4/3]"
+              style={{ boxShadow: "var(--shadow-soft)" }}
+            />
+            <div className="hidden md:flex absolute -bottom-5 -left-5 bg-card rounded-2xl px-4 py-3 items-center gap-3 border border-border" style={{ boxShadow: "var(--shadow-soft)" }}>
+              <div className="w-9 h-9 rounded-full bg-success/15 flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-success" />
+              </div>
+              <div className="text-xs">
+                <div className="font-medium">Higienis & Aman</div>
+                <div className="text-muted-foreground">Standar profesional</div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        <div className="bg-card rounded-2xl p-6 md:p-8 space-y-8" style={{ boxShadow: "var(--shadow-soft)" }}>
+        {/* PAKET PREVIEW */}
+        <section id="paket" className="py-10">
+          <div className="text-center mb-8">
+            <span className="text-xs uppercase tracking-widest text-primary font-medium">Paket Kami</span>
+            <h2 className="font-display text-3xl md:text-4xl mt-2">Pilih perawatan yang tepat</h2>
+            <p className="text-muted-foreground mt-2 max-w-lg mx-auto">Setiap sentuhan dirancang untuk meredakan, memulihkan, dan menenangkan.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {PACKAGES.map((p, i) => {
+              const Icon = [HandHeart, Baby, Flower2][i] ?? Sparkles;
+              return (
+                <div key={p.id} className="bg-card rounded-2xl p-6 border border-border hover:border-primary/40 transition flex flex-col" style={{ boxShadow: "var(--shadow-soft)" }}>
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="font-display text-xl">{p.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1 flex-1">{p.desc}</p>
+                  <div className="mt-4 flex items-end justify-between">
+                    <span className="font-display text-2xl text-primary">{formatIDR(p.price)}</span>
+                    <a
+                      href="#booking"
+                      onClick={() => setPackageId(p.id)}
+                      className="text-sm font-medium text-primary hover:underline"
+                    >
+                      Pesan →
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* MENGAPA KAMI */}
+        <section className="py-10">
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              { icon: ShieldCheck, title: "Terapis Profesional", desc: "Bersertifikat dan berpengalaman menangani berbagai kebutuhan." },
+              { icon: Home, title: "Bisa ke Rumah", desc: "Nikmati pijat tanpa perlu keluar rumah, dengan biaya terjangkau." },
+              { icon: Clock3, title: "Jadwal Fleksibel", desc: "Pilih waktu sesuai keinginan, konfirmasi cepat via WhatsApp." },
+            ].map((f) => (
+              <div key={f.title} className="p-5 rounded-xl bg-card/60 backdrop-blur border border-border">
+                <f.icon className="w-6 h-6 text-primary" />
+                <h3 className="font-medium mt-3">{f.title}</h3>
+                <p className="text-sm text-muted-foreground mt-1">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* TESTIMONI */}
+        <section className="py-10">
+          <div className="text-center mb-8">
+            <span className="text-xs uppercase tracking-widest text-primary font-medium">Cerita Klien</span>
+            <h2 className="font-display text-3xl md:text-4xl mt-2">Apa kata mereka</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              { name: "Ibu Rani", text: "Pijat bayi-nya luar biasa lembut. Si kecil langsung tidur nyenyak setelahnya.", role: "Klien Pijat Bayi" },
+              { name: "Pak Dimas", text: "Setelah duduk di depan laptop seharian, pijat capek ini benar-benar menyelamatkan punggung saya.", role: "Klien Pijat Capek" },
+              { name: "Ibu Sari", text: "Paket ibu & bayi sangat lengkap. Terapisnya ramah dan sangat sabar.", role: "Klien Paket Ibu & Bayi" },
+            ].map((t) => (
+              <figure key={t.name} className="bg-card rounded-2xl p-6 border border-border" style={{ boxShadow: "var(--shadow-soft)" }}>
+                <Quote className="w-6 h-6 text-accent" />
+                <blockquote className="mt-3 text-sm text-foreground/90 leading-relaxed">"{t.text}"</blockquote>
+                <figcaption className="mt-4 text-xs">
+                  <div className="font-medium">{t.name}</div>
+                  <div className="text-muted-foreground">{t.role}</div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+
+        {/* BOOKING FORM */}
+        <section id="booking" className="pt-10">
+          <div className="text-center mb-6">
+            <span className="text-xs uppercase tracking-widest text-primary font-medium">Booking</span>
+            <h2 className="font-display text-3xl md:text-4xl mt-2">Mulai pesanan Anda</h2>
+            <p className="text-muted-foreground mt-2">Hanya butuh 1 menit untuk menyelesaikan booking.</p>
+          </div>
+        <div className="bg-card rounded-2xl p-6 md:p-8 space-y-8 max-w-3xl mx-auto" style={{ boxShadow: "var(--shadow-soft)" }}>
+
           {/* Package */}
           <section>
             <h3 className="font-display text-xl mb-4">1. Pilih Paket</h3>
@@ -277,6 +402,7 @@ function BookingPage() {
             </p>
           </section>
         </div>
+        </section>
       </main>
       <Toaster />
     </div>
