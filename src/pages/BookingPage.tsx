@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PACKAGES, SERVICE_FEE_HOME, TIME_SLOTS, formatIDR, type PackageId } from "@/lib/bookings";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Flower2, CheckCircle2, MapPin, Home, Calendar as CalendarIcon, Sparkles, HandHeart, Baby, Quote, Star, ShieldCheck, Clock3 } from "lucide-react";
+import { Flower2, CheckCircle2, MapPin, Home, Calendar as CalendarIcon, Sparkles, HandHeart, Baby, Quote, ShieldCheck } from "lucide-react";
 import heroImage from "@/assets/spa-hero.jpg";
 
 function todayISO() {

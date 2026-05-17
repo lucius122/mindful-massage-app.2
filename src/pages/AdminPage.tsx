@@ -246,7 +246,7 @@ function LogFeed() {
   };
 
   const actionStyle: Record<BookingLog["action"], string> = {
-    booking_baru: "bg-blue-50 text-blue-700",
+    booking_baru: "bg-primary/10 text-primary",
     dikonfirmasi: "bg-success/10 text-success",
     dibatalkan: "bg-destructive/10 text-destructive",
   };
