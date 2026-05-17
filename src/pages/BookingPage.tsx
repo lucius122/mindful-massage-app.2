@@ -113,14 +113,14 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--gradient-spa)" }}>
+    <div className="min-h-screen bg-background">
       <header className="px-6 pt-8 pb-4 max-w-3xl mx-auto">
         <div
           className="flex items-center gap-2 cursor-default select-none w-fit"
           onClick={handleLogoTap}
         >
-          <Flower2 className="w-6 h-6 text-primary" />
-          <span className="font-display text-2xl text-foreground">Sentuhan Sejuk</span>
+          <Flower2 className="w-5 h-5 text-primary" />
+          <span className="font-display text-xl text-foreground">Sentuhan Sejuk</span>
         </div>
       </header>
       <main className="max-w-5xl mx-auto px-6 pb-16">
@@ -327,22 +327,29 @@ type BookingFormProps = {
 };
 
 function BookingFormSection(props: BookingFormProps) {
-  const { packageId, setPackageId, serviceType, setServiceType, name, setName, whatsapp, setWhatsapp, address, setAddress, date, setDate, time, setTime, takenSlots, total, submitting, submit } = props;
+  const {
+    packageId, setPackageId, serviceType, setServiceType,
+    name, setName, whatsapp, setWhatsapp, address, setAddress,
+    date, setDate, time, setTime, takenSlots, total, submitting, submit,
+  } = props;
+
   return (
     <section id="booking" className="pt-10">
-      <div className="text-center mb-6">
-        <span className="text-xs uppercase tracking-widest text-primary font-medium">Booking</span>
-        <h2 className="font-display text-3xl md:text-4xl mt-2">Mulai pesanan Anda</h2>
-        <p className="text-muted-foreground mt-2">Hanya butuh 1 menit untuk menyelesaikan booking.</p>
-      </div>
-      <div className="bg-card rounded-2xl p-6 md:p-8 space-y-8 max-w-3xl mx-auto" style={{ boxShadow: "var(--shadow-soft)" }}>
-        {/* 1. Pilih Paket */}
+      <h2 className="font-display text-3xl md:text-4xl mb-6">Yuk, booking sekarang</h2>
+      <div className="bg-card rounded-xl p-6 md:p-8 space-y-8 max-w-3xl mx-auto border border-border">
+        {/* Paket */}
         <section>
-          <h3 className="font-display text-xl mb-4">1. Pilih Paket</h3>
+          <h3 className="font-semibold text-base mb-4">Paket apa?</h3>
           <div className="grid gap-3 md:grid-cols-3">
             {PACKAGES.map((p) => (
-              <button key={p.id} type="button" onClick={() => setPackageId(p.id)}
-                className={`text-left rounded-xl border-2 p-4 transition ${packageId === p.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setPackageId(p.id)}
+                className={`text-left rounded-lg border-2 p-4 transition ${
+                  packageId === p.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                }`}
+              >
                 <div className="font-medium">{p.name}</div>
                 <div className="text-xs text-muted-foreground mt-1 min-h-8">{p.desc}</div>
                 <div className="mt-3 text-primary font-semibold">{formatIDR(p.price)}</div>
@@ -350,68 +357,118 @@ function BookingFormSection(props: BookingFormProps) {
             ))}
           </div>
         </section>
-        {/* 2. Lokasi */}
+
+        {/* Lokasi */}
         <section>
-          <h3 className="font-display text-xl mb-4">2. Lokasi Layanan</h3>
+          <h3 className="font-semibold text-base mb-4">Mau ke mana?</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             {([
               { id: "tempat" as const, label: "Datang ke Tempat", sub: "Tidak ada biaya tambahan", icon: MapPin },
               { id: "rumah" as const, label: "Panggilan ke Rumah", sub: `+ ${formatIDR(SERVICE_FEE_HOME)}`, icon: Home },
             ]).map((opt) => (
-              <button key={opt.id} type="button" onClick={() => setServiceType(opt.id)}
-                className={`flex items-start gap-3 rounded-xl border-2 p-4 text-left transition ${serviceType === opt.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setServiceType(opt.id)}
+                className={`flex items-start gap-3 rounded-lg border-2 p-4 text-left transition ${
+                  serviceType === opt.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                }`}
+              >
                 <opt.icon className="w-5 h-5 text-primary mt-0.5" />
-                <div><div className="font-medium">{opt.label}</div><div className="text-xs text-muted-foreground mt-1">{opt.sub}</div></div>
+                <div>
+                  <div className="font-medium">{opt.label}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{opt.sub}</div>
+                </div>
               </button>
             ))}
           </div>
         </section>
-        {/* 3. Data */}
+
+        {/* Data */}
         <section>
-          <h3 className="font-display text-xl mb-4">3. Data Anda</h3>
+          <h3 className="font-semibold text-base mb-4">Data kamu</h3>
           <div className="grid gap-3 sm:grid-cols-2">
-            <input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder="Nama lengkap"
-              className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d+]/g, ""))} maxLength={20} placeholder="Nomor WhatsApp (cth: 08123456789)"
-              className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={100}
+              placeholder="Nama lengkap"
+              className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <input
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d+]/g, ""))}
+              maxLength={20}
+              placeholder="Nomor WhatsApp (cth: 08123456789)"
+              className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
           {serviceType === "rumah" && (
-            <textarea value={address} onChange={(e) => setAddress(e.target.value)} maxLength={500} rows={3} placeholder="Alamat lengkap (jalan, nomor rumah, patokan)"
-              className="mt-3 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              maxLength={500}
+              rows={3}
+              placeholder="Alamat lengkap (jalan, nomor rumah, patokan)"
+              className="mt-3 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           )}
         </section>
-        {/* 4. Waktu */}
+
+        {/* Waktu */}
         <section>
-          <h3 className="font-display text-xl mb-4">4. Tanggal &amp; Jam</h3>
+          <h3 className="font-semibold text-base mb-4">Kapan?</h3>
           <div className="flex items-center gap-2 mb-4">
             <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-            <input type="date" value={date} min={todayISO()} onChange={(e) => { setDate(e.target.value); setTime(null); }}
-              className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            <input
+              type="date"
+              value={date}
+              min={todayISO()}
+              onChange={(e) => { setDate(e.target.value); setTime(null); }}
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {TIME_SLOTS.map((slot) => {
               const taken = takenSlots.includes(slot);
               const sel = time === slot;
               return (
-                <button key={slot} type="button" disabled={taken} onClick={() => setTime(slot)}
-                  className={`py-2 rounded-lg text-sm font-medium transition border ${taken ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border line-through" : sel ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:border-primary"}`}>
+                <button
+                  key={slot}
+                  type="button"
+                  disabled={taken}
+                  onClick={() => setTime(slot)}
+                  className={`py-2 rounded-lg text-sm font-medium transition border ${
+                    taken
+                      ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border line-through"
+                      : sel
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-border hover:border-primary"
+                  }`}
+                >
                   {slot}
                 </button>
               );
             })}
           </div>
         </section>
+
         {/* Total */}
         <section className="border-t border-border pt-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-muted-foreground">Total Pembayaran</span>
+            <span className="text-muted-foreground">Total</span>
             <span className="font-display text-2xl text-primary">{formatIDR(total)}</span>
           </div>
-          <button onClick={submit} disabled={submitting}
-            className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition disabled:opacity-60">
-            {submitting ? "Memproses..." : "Pesan Sekarang"}
+          <button
+            onClick={submit}
+            disabled={submitting}
+            className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition disabled:opacity-60"
+          >
+            {submitting ? "Memproses..." : "Pesan sekarang"}
           </button>
-          <p className="text-xs text-muted-foreground text-center mt-3">Terapis akan menghubungi Anda via WhatsApp untuk konfirmasi.</p>
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            Terapis akan kabarin kamu via WhatsApp untuk konfirmasi.
+          </p>
         </section>
       </div>
     </section>
