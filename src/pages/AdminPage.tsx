@@ -154,7 +154,7 @@ export default function AdminPage() {
           <p className="text-center text-muted-foreground py-12">Tidak ada booking.</p>
         ) : (
           filtered.map((b) => (
-            <article key={b.id} className="bg-card rounded-xl p-4 border border-border" style={{ boxShadow: "var(--shadow-soft)" }}>
+            <article key={b.id} className="bg-card rounded-lg p-4 border border-border">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-medium text-base">{b.customer_name}</h3>
@@ -184,11 +184,11 @@ export default function AdminPage() {
                   <>
                     <button onClick={() => updateStatus(b.id, "confirmed")}
                       className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition">
-                      <Check className="w-4 h-4" /> Setujui
+                      <Check className="w-4 h-4" /> Konfirmasi
                     </button>
                     <button onClick={() => updateStatus(b.id, "cancelled")}
                       className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:opacity-90 transition">
-                      <X className="w-4 h-4" /> Batal
+                      <X className="w-4 h-4" /> Batalkan
                     </button>
                   </>
                 )}
