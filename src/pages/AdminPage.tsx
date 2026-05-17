@@ -215,19 +215,27 @@ function LogFeed() {
       let query = db
         .from("booking_logs")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
+
       if (logFilter === "today") {
-        const today = new Date().toISOString().slice(0, 10);
-        query = query.gte("created_at", today + "T00:00:00").lte("created_at", today + "T23:59:59");
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        query = query.gte("created_at", todayStart.toISOString());
       }
+
       const { data, error } = await query;
       if (!error) setLogs((data ?? []) as unknown as BookingLog[]);
       setLoading(false);
     };
+
     load();
-    const channel = supabase.channel("admin-logs")
-      .on("postgres_changes", { event: "*", schema: "public", table: "booking_logs" }, load)
+
+    const channel = supabase
+      .channel("admin-logs")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "booking_logs" }, load)
       .subscribe();
+
     return () => { supabase.removeChannel(channel); };
   }, [logFilter]);
 
@@ -238,43 +246,68 @@ function LogFeed() {
   };
 
   const actionStyle: Record<BookingLog["action"], string> = {
-    booking_baru: "bg-accent text-accent-foreground",
-    dikonfirmasi: "bg-success/15 text-success",
-    dibatalkan: "bg-destructive/15 text-destructive",
+    booking_baru: "bg-blue-50 text-blue-700",
+    dikonfirmasi: "bg-success/10 text-success",
+    dibatalkan: "bg-destructive/10 text-destructive",
+  };
+
+  const relativeTime = (iso: string) => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    const hrs = Math.floor(mins / 60);
+    const days = Math.floor(hrs / 24);
+    if (days > 0) return `${days} hari lalu`;
+    if (hrs > 0) return `${hrs} jam lalu`;
+    if (mins > 0) return `${mins} menit lalu`;
+    return "Baru saja";
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex gap-2">
-        {(["today", "all"] as LogFilter[]).map((f) => (
-          <button
-            key={f}
-            onClick={() => setLogFilter(f)}
-            className={`px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap transition ${
-              logFilter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-secondary"
-            }`}
-          >
-            {f === "today" ? "Hari Ini" : "Semua"}
-          </button>
-        ))}
+    <div className="max-w-3xl mx-auto px-4 py-5">
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setLogFilter("today")}
+          className={`px-3 py-1 rounded-md text-xs font-medium transition ${
+            logFilter === "today" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-secondary"
+          }`}
+        >
+          Hari ini
+        </button>
+        <button
+          onClick={() => setLogFilter("all")}
+          className={`px-3 py-1 rounded-md text-xs font-medium transition ${
+            logFilter === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-secondary"
+          }`}
+        >
+          Semua
+        </button>
       </div>
       {loading ? (
         <p className="text-center text-muted-foreground py-12">Memuat...</p>
       ) : logs.length === 0 ? (
-        <p className="text-center text-muted-foreground py-12">Tidak ada riwayat.</p>
+        <p className="text-center text-muted-foreground py-12">
+          {logFilter === "today" ? "Belum ada aktivitas hari ini." : "Belum ada riwayat."}
+        </p>
       ) : (
-        logs.map((log) => (
-          <div key={log.id} className="bg-card rounded-xl p-4 border border-border flex items-start justify-between gap-3" style={{ boxShadow: "var(--shadow-soft)" }}>
-            <div>
-              <p className="font-medium text-sm">{log.customer_name}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{log.package_name}</p>
-              <p className="text-xs text-muted-foreground mt-1">{new Date(log.created_at).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}</p>
+        <div className="space-y-2">
+          {logs.map((log) => (
+            <div
+              key={log.id}
+              className="flex items-center gap-3 bg-card rounded-lg px-4 py-3 border border-border"
+            >
+              <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${actionStyle[log.action]}`}>
+                {actionLabel[log.action]}
+              </span>
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-medium">{log.customer_name}</span>
+                <span className="text-xs text-muted-foreground ml-2">{log.package_name}</span>
+              </div>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {relativeTime(log.created_at)}
+              </span>
             </div>
-            <span className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${actionStyle[log.action]}`}>
-              {actionLabel[log.action]}
-            </span>
-          </div>
-        ))
+          ))}
+        </div>
       )}
     </div>
   );
