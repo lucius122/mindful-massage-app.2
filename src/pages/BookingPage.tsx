@@ -160,16 +160,6 @@ function HeroSection() {
             Lihat paket
           </a>
         </div>
-        <div className="mt-8 flex gap-8 text-sm">
-          <div>
-            <div className="font-display text-3xl text-foreground">14 thn</div>
-            <div className="text-muted-foreground text-xs">pengalaman</div>
-          </div>
-          <div>
-            <div className="font-display text-3xl text-foreground">2</div>
-            <div className="text-muted-foreground text-xs">opsi lokasi</div>
-          </div>
-        </div>
       </div>
       <div className="relative">
         <img

@@ -202,12 +202,20 @@ export default function AdminPage() {
   );
 }
 
+const LOG_PAGE_SIZE = 50;
+
 function LogFeed() {
   const [logs, setLogs] = useState<BookingLog[]>([]);
   const [logFilter, setLogFilter] = useState<LogFilter>("today");
   const [loading, setLoading] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
+    setOffset(0);
+    setLogs([]);
+
     const load = async () => {
       setLoading(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -216,7 +224,7 @@ function LogFeed() {
         .from("booking_logs")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(50);
+        .range(0, LOG_PAGE_SIZE - 1);
 
       if (logFilter === "today") {
         const todayStart = new Date();
@@ -225,7 +233,14 @@ function LogFeed() {
       }
 
       const { data, error } = await query;
-      if (!error) setLogs((data ?? []) as unknown as BookingLog[]);
+      if (error) {
+        toast.error("Gagal memuat riwayat");
+      } else {
+        const rows = (data ?? []) as unknown as BookingLog[];
+        setLogs(rows);
+        setHasMore(rows.length === LOG_PAGE_SIZE);
+        setOffset(rows.length);
+      }
       setLoading(false);
     };
 
@@ -238,6 +253,34 @@ function LogFeed() {
 
     return () => { supabase.removeChannel(channel); };
   }, [logFilter]);
+
+  const loadMore = async () => {
+    setLoadingMore(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    let query = db
+      .from("booking_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + LOG_PAGE_SIZE - 1);
+
+    if (logFilter === "today") {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      query = query.gte("created_at", todayStart.toISOString());
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      toast.error("Gagal memuat lebih banyak riwayat");
+    } else {
+      const rows = (data ?? []) as unknown as BookingLog[];
+      setLogs((prev) => [...prev, ...rows]);
+      setHasMore(rows.length === LOG_PAGE_SIZE);
+      setOffset((prev) => prev + rows.length);
+    }
+    setLoadingMore(false);
+  };
 
   const actionLabel: Record<BookingLog["action"], string> = {
     booking_baru: "Booking baru",
@@ -263,7 +306,7 @@ function LogFeed() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-5">
+    <div>
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setLogFilter("today")}
@@ -307,6 +350,15 @@ function LogFeed() {
               </span>
             </div>
           ))}
+          {hasMore && (
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="w-full py-2.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg hover:bg-muted transition disabled:opacity-50"
+            >
+              {loadingMore ? "Memuat..." : "Muat lebih banyak"}
+            </button>
+          )}
         </div>
       )}
     </div>
