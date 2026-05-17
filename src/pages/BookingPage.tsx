@@ -86,21 +86,26 @@ export default function BookingPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "var(--gradient-spa)" }}>
-        <div className="max-w-md w-full bg-card rounded-2xl p-8 text-center" style={{ boxShadow: "var(--shadow-soft)" }}>
-          <div className="mx-auto w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mb-4">
-            <CheckCircle2 className="w-9 h-9 text-success" />
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <div className="max-w-md w-full bg-card rounded-xl p-8 text-center border border-border">
+          <div className="mx-auto w-14 h-14 rounded-full bg-success/10 flex items-center justify-center mb-5">
+            <CheckCircle2 className="w-8 h-8 text-success" />
           </div>
-          <h2 className="font-display text-3xl text-foreground">Booking diterima</h2>
-          <p className="mt-3 text-muted-foreground">
-            Terima kasih, <span className="text-foreground font-medium">{name}</span>. Terapis kami akan menghubungi Anda melalui WhatsApp untuk konfirmasi jadwal dan alamat.
+          <h2 className="font-display text-3xl text-foreground">Booking masuk!</h2>
+          <p className="mt-3 text-muted-foreground text-sm leading-relaxed">
+            Oke, <span className="text-foreground font-medium">{name}</span>. Terapis kami akan kabarin kamu lewat WhatsApp buat konfirmasi jadwal.
           </p>
-          <div className="mt-6 p-4 rounded-lg bg-muted text-left text-sm space-y-1">
+          <div className="mt-6 p-4 rounded-lg bg-muted text-left text-sm space-y-1.5">
             <div><span className="text-muted-foreground">Paket:</span> {pkg.name}</div>
             <div><span className="text-muted-foreground">Jadwal:</span> {date} • {time}</div>
             <div><span className="text-muted-foreground">Total:</span> {formatIDR(total)}</div>
           </div>
-          <button onClick={reset} className="mt-6 w-full py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition">Buat Booking Lain</button>
+          <button
+            onClick={reset}
+            className="mt-6 w-full py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition"
+          >
+            Booking lagi
+          </button>
         </div>
         <Toaster />
       </div>
@@ -141,29 +146,47 @@ function HeroSection() {
   return (
     <section className="grid md:grid-cols-2 gap-8 items-center py-10 md:py-16">
       <div>
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-card border border-border text-muted-foreground">
-          <Sparkles className="w-3.5 h-3.5 text-primary" /> Terapis berpengalaman
-        </span>
-        <h1 className="mt-4 font-display text-4xl md:text-6xl text-foreground leading-[1.05]">
-          Tenangkan tubuh,<br /><span className="text-primary italic">pulihkan harimu.</span>
+        <h1 className="font-display text-4xl md:text-5xl text-foreground leading-[1.1]">
+          Pijat yang<br /><span className="text-primary italic">beneran enak.</span>
         </h1>
-        <p className="mt-4 text-muted-foreground max-w-md">
-          Layanan pijat berpengalaman untuk Anda dan keluarga. Datang ke tempat kami yang tenang, atau biarkan kami datang ke rumah Anda.
+        <p className="mt-4 text-muted-foreground max-w-md leading-relaxed">
+          Udah 14 tahun ngurusin punggung, bahu, sama kaki orang. Bisa datang ke tempat kami yang tenang, atau kami yang ke rumahmu.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <a href="#booking" className="px-5 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition">Pesan Sekarang</a>
-          <a href="#paket" className="px-5 py-3 rounded-lg border border-border bg-card hover:border-primary/40 transition font-medium">Lihat Paket</a>
+          <a href="#booking" className="px-5 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition">
+            Yuk, booking →
+          </a>
+          <a href="#paket" className="px-5 py-3 rounded-lg border border-border bg-card hover:border-primary/40 transition font-medium">
+            Lihat paket
+          </a>
         </div>
-        <div className="mt-8 flex gap-6 text-sm">
-          <div><div className="font-display text-2xl text-foreground">14 thn</div><div className="text-muted-foreground text-xs">Pengalaman</div></div>
+        <div className="mt-8 flex gap-8 text-sm">
+          <div>
+            <div className="font-display text-3xl text-foreground">14 thn</div>
+            <div className="text-muted-foreground text-xs">pengalaman</div>
+          </div>
+          <div>
+            <div className="font-display text-3xl text-foreground">2</div>
+            <div className="text-muted-foreground text-xs">opsi lokasi</div>
+          </div>
         </div>
       </div>
       <div className="relative">
-        <img src={heroImage} alt="Terapi pijat dengan eucalyptus dan batu spa" width={1280} height={960}
-          className="rounded-3xl w-full h-auto object-cover aspect-[4/3]" style={{ boxShadow: "var(--shadow-soft)" }} />
-        <div className="hidden md:flex absolute -bottom-5 -left-5 bg-card rounded-2xl px-4 py-3 items-center gap-3 border border-border" style={{ boxShadow: "var(--shadow-soft)" }}>
-          <div className="w-9 h-9 rounded-full bg-success/15 flex items-center justify-center"><ShieldCheck className="w-5 h-5 text-success" /></div>
-          <div className="text-xs"><div className="font-medium">Higienis &amp; Aman</div><div className="text-muted-foreground">Standar profesional</div></div>
+        <img
+          src={heroImage}
+          alt="Terapi pijat dengan eucalyptus dan batu spa"
+          width={1280}
+          height={960}
+          className="rounded-2xl w-full h-auto object-cover aspect-[4/3]"
+        />
+        <div className="hidden md:flex absolute -bottom-5 -left-5 bg-card rounded-xl px-4 py-3 items-center gap-3 border border-border">
+          <div className="w-9 h-9 rounded-full bg-success/15 flex items-center justify-center">
+            <ShieldCheck className="w-5 h-5 text-success" />
+          </div>
+          <div className="text-xs">
+            <div className="font-medium">Higienis &amp; Aman</div>
+            <div className="text-muted-foreground">Standar profesional</div>
+          </div>
         </div>
       </div>
     </section>
