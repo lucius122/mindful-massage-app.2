@@ -196,22 +196,35 @@ function HeroSection() {
 function PackagesSection({ packageId, setPackageId }: { packageId: PackageId; setPackageId: (id: PackageId) => void }) {
   return (
     <section id="paket" className="py-10">
-      <div className="text-center mb-8">
-        <span className="text-xs uppercase tracking-widest text-primary font-medium">Paket Kami</span>
-        <h2 className="font-display text-3xl md:text-4xl mt-2">Pilih perawatan yang tepat</h2>
-        <p className="text-muted-foreground mt-2 max-w-lg mx-auto">Setiap sentuhan dirancang untuk meredakan, memulihkan, dan menenangkan.</p>
-      </div>
+      <h2 className="font-display text-3xl md:text-4xl mb-8">Pilih paketmu</h2>
       <div className="grid md:grid-cols-3 gap-4">
         {PACKAGES.map((p, i) => {
           const Icon = [HandHeart, Baby, Flower2][i] ?? Sparkles;
+          const isFeatured = p.id === "paket-ibu-bayi";
           return (
-            <div key={p.id} className="bg-card rounded-2xl p-6 border border-border hover:border-primary/40 transition flex flex-col" style={{ boxShadow: "var(--shadow-soft)" }}>
-              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4"><Icon className="w-5 h-5 text-primary" /></div>
+            <div
+              key={p.id}
+              className={`bg-card rounded-xl p-6 border-2 flex flex-col transition ${
+                isFeatured ? "border-primary" : "border-border hover:border-primary/40"
+              }`}
+            >
+              {isFeatured && (
+                <span className="text-xs font-bold text-primary mb-3">✦ Terlaris</span>
+              )}
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Icon className="w-5 h-5 text-primary" />
+              </div>
               <h3 className="font-display text-xl">{p.name}</h3>
               <p className="text-sm text-muted-foreground mt-1 flex-1">{p.desc}</p>
               <div className="mt-4 flex items-end justify-between">
                 <span className="font-display text-2xl text-primary">{formatIDR(p.price)}</span>
-                <a href="#booking" onClick={() => setPackageId(p.id)} className="text-sm font-medium text-primary hover:underline">Pesan →</a>
+                <a
+                  href="#booking"
+                  onClick={() => setPackageId(p.id)}
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Pesan →
+                </a>
               </div>
             </div>
           );
@@ -224,16 +237,30 @@ function PackagesSection({ packageId, setPackageId }: { packageId: PackageId; se
 function WhyUsSection() {
   return (
     <section className="py-10">
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-3 gap-6">
         {[
-          { icon: ShieldCheck, title: "Terapis Berpengalaman", desc: "Berpengalaman menangani berbagai kebutuhan." },
-          { icon: Home, title: "Bisa ke Rumah", desc: "Nikmati pijat tanpa perlu keluar rumah, dengan biaya terjangkau." },
-          { icon: Clock3, title: "Jadwal Fleksibel", desc: "Pilih waktu sesuai keinginan, konfirmasi cepat via WhatsApp." },
+          {
+            stat: "14",
+            unit: "tahun",
+            desc: "Berpengalaman menangani berbagai kebutuhan — dari punggung pegal sampai pijat bayi newborn.",
+          },
+          {
+            stat: "2",
+            unit: "opsi lokasi",
+            desc: "Datang ke tempat kami yang tenang, atau kami yang ke rumahmu. Biaya panggilan terjangkau.",
+          },
+          {
+            stat: "WA",
+            unit: "konfirmasi cepat",
+            desc: "Jadwal fleksibel, konfirmasi langsung lewat WhatsApp. Tidak perlu download app apapun.",
+          },
         ].map((f) => (
-          <div key={f.title} className="p-5 rounded-xl bg-card/60 backdrop-blur border border-border">
-            <f.icon className="w-6 h-6 text-primary" />
-            <h3 className="font-medium mt-3">{f.title}</h3>
-            <p className="text-sm text-muted-foreground mt-1">{f.desc}</p>
+          <div key={f.stat} className="p-6 rounded-xl bg-card border border-border">
+            <div className="font-display text-5xl text-primary leading-none">{f.stat}</div>
+            <div className="text-xs font-semibold text-muted-foreground mt-1 mb-3 uppercase tracking-wide">
+              {f.unit}
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
           </div>
         ))}
       </div>
@@ -242,24 +269,44 @@ function WhyUsSection() {
 }
 
 function TestimonialsSection() {
+  const testimonials = [
+    {
+      name: "Ibu Rani",
+      text: "Pijat bayi-nya luar biasa lembut. Si kecil langsung tidur nyenyak setelahnya. Terapisnya juga sabar banget jelasin cara pijat yang bener.",
+      role: "Klien Pijat Bayi",
+    },
+    {
+      name: "Pak Dimas",
+      text: "Setelah duduk di depan laptop seharian, pijat capek ini benar-benar menyelamatkan punggung saya.",
+      role: "Klien Pijat Capek",
+    },
+    {
+      name: "Ibu Sari",
+      text: "Paket ibu & bayi sangat lengkap. Terapisnya ramah dan sangat sabar.",
+      role: "Klien Paket Ibu & Bayi",
+    },
+  ];
+
   return (
     <section className="py-10">
-      <div className="text-center mb-8">
-        <span className="text-xs uppercase tracking-widest text-primary font-medium">Cerita Klien</span>
-        <h2 className="font-display text-3xl md:text-4xl mt-2">Apa kata mereka</h2>
-      </div>
-      <div className="grid md:grid-cols-3 gap-4">
-        {[
-          { name: "Ibu Rani", text: "Pijat bayi-nya luar biasa lembut. Si kecil langsung tidur nyenyak setelahnya.", role: "Klien Pijat Bayi" },
-          { name: "Pak Dimas", text: "Setelah duduk di depan laptop seharian, pijat capek ini benar-benar menyelamatkan punggung saya.", role: "Klien Pijat Capek" },
-          { name: "Ibu Sari", text: "Paket ibu & bayi sangat lengkap. Terapisnya ramah dan sangat sabar.", role: "Klien Paket Ibu & Bayi" },
-        ].map((t) => (
-          <figure key={t.name} className="bg-card rounded-2xl p-6 border border-border" style={{ boxShadow: "var(--shadow-soft)" }}>
-            <Quote className="w-6 h-6 text-accent" />
-            <blockquote className="mt-3 text-sm text-foreground/90 leading-relaxed">"{t.text}"</blockquote>
+      <h2 className="font-display text-3xl md:text-4xl mb-8">Kata mereka</h2>
+      <div className="grid md:grid-cols-2 gap-4">
+        <figure className="bg-card rounded-xl p-7 border border-border md:row-span-2 flex flex-col">
+          <Quote className="w-7 h-7 text-primary/40" />
+          <blockquote className="mt-4 font-display italic text-xl text-foreground/90 leading-relaxed flex-1">
+            "{testimonials[0].text}"
+          </blockquote>
+          <figcaption className="mt-6 text-sm">
+            <div className="font-medium">{testimonials[0].name}</div>
+            <div className="text-muted-foreground text-xs mt-0.5">{testimonials[0].role}</div>
+          </figcaption>
+        </figure>
+        {testimonials.slice(1).map((t) => (
+          <figure key={t.name} className="bg-card rounded-xl p-5 border border-border">
+            <blockquote className="text-sm text-foreground/90 leading-relaxed">"{t.text}"</blockquote>
             <figcaption className="mt-4 text-xs">
               <div className="font-medium">{t.name}</div>
-              <div className="text-muted-foreground">{t.role}</div>
+              <div className="text-muted-foreground mt-0.5">{t.role}</div>
             </figcaption>
           </figure>
         ))}
