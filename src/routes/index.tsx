@@ -402,6 +402,7 @@ function BookingPage() {
             </p>
           </section>
         </div>
+        </section>
       </main>
       <Toaster />
     </div>
