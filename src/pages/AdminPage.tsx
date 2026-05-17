@@ -4,7 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { formatIDR } from "@/lib/bookings";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { MessageCircle, Check, X, Clock, MapPin, Home as HomeIcon, LogOut, Flower2 } from "lucide-react";
+import { MessageCircle, Check, X, Clock, MapPin, Home as HomeIcon, LogOut } from "lucide-react";
 
 type Booking = {
   id: string;
@@ -50,7 +50,7 @@ export default function AdminPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => { document.title = "Admin — Sentuhan Sejuk"; }, []);
+  useEffect(() => { document.title = "Admin — Pijat Bunda WIN"; }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -97,10 +97,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Flower2 className="w-4 h-4 text-primary" />
-            <span className="font-medium text-sm text-foreground">Sentuhan Sejuk</span>
-          </div>
+          <span className="font-semibold text-sm text-foreground">Pijat Bunda WIN</span>
           <button
             onClick={() => supabase.auth.signOut()}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition"
@@ -392,10 +389,7 @@ function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Flower2 className="w-5 h-5 text-primary" />
-            <span className="font-display text-xl text-foreground">Sentuhan Sejuk</span>
-          </div>
+          <div className="font-semibold text-xl text-foreground mb-2">Pijat Bunda WIN</div>
           <p className="text-muted-foreground text-sm">Masuk ke dashboard</p>
         </div>
         <div className="bg-card rounded-xl p-7 border border-border">

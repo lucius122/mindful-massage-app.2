@@ -4,8 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PACKAGES, SERVICE_FEE_HOME, TIME_SLOTS, formatIDR, type PackageId } from "@/lib/bookings";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Flower2, CheckCircle2, MapPin, Home, Calendar as CalendarIcon, Sparkles, HandHeart, Baby, Quote, ShieldCheck } from "lucide-react";
-import heroImage from "@/assets/spa-hero.jpg";
+import { CheckCircle2, MapPin, Home, Calendar as CalendarIcon } from "lucide-react";
 
 function todayISO() {
   const d = new Date();
@@ -45,7 +44,7 @@ export default function BookingPage() {
   const pkg = PACKAGES.find((p) => p.id === packageId)!;
   const total = useMemo(() => pkg.price + (serviceType === "rumah" ? SERVICE_FEE_HOME : 0), [pkg, serviceType]);
 
-  useEffect(() => { document.title = "Sentuhan Sejuk — Booking Pijat Profesional"; }, []);
+  useEffect(() => { document.title = "Pijat Bunda WIN — Booking"; }, []);
 
   useEffect(() => {
     let active = true;
@@ -91,9 +90,9 @@ export default function BookingPage() {
           <div className="mx-auto w-14 h-14 rounded-full bg-success/10 flex items-center justify-center mb-5">
             <CheckCircle2 className="w-8 h-8 text-success" />
           </div>
-          <h2 className="font-display text-3xl text-foreground">Booking masuk!</h2>
+          <h2 className="font-semibold text-2xl text-foreground">Booking berhasil dikirim</h2>
           <p className="mt-3 text-muted-foreground text-sm leading-relaxed">
-            Oke, <span className="text-foreground font-medium">{name}</span>. Terapis kami akan kabarin kamu lewat WhatsApp buat konfirmasi jadwal.
+            Terima kasih, <span className="text-foreground font-medium">{name}</span>. Terapis kami akan menghubungi Anda lewat WhatsApp untuk konfirmasi jadwal.
           </p>
           <div className="mt-6 p-4 rounded-lg bg-muted text-left text-sm space-y-1.5">
             <div><span className="text-muted-foreground">Paket:</span> {pkg.name}</div>
@@ -114,353 +113,266 @@ export default function BookingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="px-6 pt-8 pb-4 max-w-3xl mx-auto">
-        <div
-          className="flex items-center gap-2 cursor-default select-none w-fit"
+      {/* Header — logo di kiri */}
+      <header className="px-5 py-4 max-w-3xl mx-auto">
+        <span
+          className="font-semibold text-lg text-foreground cursor-default select-none"
           onClick={handleLogoTap}
         >
-          <Flower2 className="w-5 h-5 text-primary" />
-          <span className="font-display text-xl text-foreground">Sentuhan Sejuk</span>
-        </div>
+          Pijat Bunda WIN
+        </span>
       </header>
-      <main className="max-w-5xl mx-auto px-6 pb-16">
-        <HeroSection />
-        <PackagesSection packageId={packageId} setPackageId={setPackageId} />
-        <WhyUsSection />
-        <TestimonialsSection />
-        <BookingFormSection
-          packageId={packageId} setPackageId={setPackageId}
-          serviceType={serviceType} setServiceType={setServiceType}
-          name={name} setName={setName} whatsapp={whatsapp} setWhatsapp={setWhatsapp}
-          address={address} setAddress={setAddress} date={date} setDate={setDate}
-          time={time} setTime={setTime} takenSlots={takenSlots}
-          total={total} submitting={submitting} submit={submit}
-        />
-      </main>
-      <Toaster />
-    </div>
-  );
-}
 
-function HeroSection() {
-  return (
-    <section className="grid md:grid-cols-2 gap-8 items-center py-10 md:py-16">
-      <div>
-        <h1 className="font-display text-4xl md:text-5xl text-foreground leading-[1.1]">
-          Pijat yang<br /><span className="text-primary italic">beneran enak.</span>
-        </h1>
-        <p className="mt-4 text-muted-foreground max-w-md leading-relaxed">
-          Udah 14 tahun ngurusin punggung, bahu, sama kaki orang. Bisa datang ke tempat kami yang tenang, atau kami yang ke rumahmu.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <a href="#booking" className="px-5 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition">
-            Yuk, booking →
+      <main className="max-w-3xl mx-auto px-5 pb-16">
+        {/* Hero — text only, ringkas */}
+        <section className="py-8 border-b border-border">
+          <h1 className="font-bold text-3xl md:text-4xl text-foreground leading-tight">
+            Layanan pijat khusus<br />perempuan & bayi
+          </h1>
+          <p className="mt-3 text-muted-foreground max-w-lg leading-relaxed">
+            Berpengalaman 14 tahun melayani pijat untuk ibu dan bayi. Bisa datang ke tempat kami atau kami ke rumah Anda.
+          </p>
+          <a
+            href="#booking"
+            className="inline-block mt-5 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition"
+          >
+            Booking sekarang
           </a>
-          <a href="#paket" className="px-5 py-3 rounded-lg border border-border bg-card hover:border-primary/40 transition font-medium">
-            Lihat paket
-          </a>
-        </div>
-      </div>
-      <div className="relative">
-        <img
-          src={heroImage}
-          alt="Terapi pijat dengan eucalyptus dan batu spa"
-          width={1280}
-          height={960}
-          className="rounded-2xl w-full h-auto object-cover aspect-[4/3]"
-        />
-        <div className="hidden md:flex absolute -bottom-5 -left-5 bg-card rounded-xl px-4 py-3 items-center gap-3 border border-border">
-          <div className="w-9 h-9 rounded-full bg-success/15 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-success" />
-          </div>
-          <div className="text-xs">
-            <div className="font-medium">Higienis &amp; Aman</div>
-            <div className="text-muted-foreground">Standar profesional</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
+        </section>
 
-function PackagesSection({ packageId, setPackageId }: { packageId: PackageId; setPackageId: (id: PackageId) => void }) {
-  return (
-    <section id="paket" className="py-10">
-      <h2 className="font-display text-3xl md:text-4xl mb-8">Pilih paketmu</h2>
-      <div className="grid md:grid-cols-3 gap-4">
-        {PACKAGES.map((p, i) => {
-          const Icon = [HandHeart, Baby, Flower2][i] ?? Sparkles;
-          const isFeatured = p.id === "paket-ibu-bayi";
-          return (
-            <div
-              key={p.id}
-              className={`bg-card rounded-xl p-6 border-2 flex flex-col transition ${
-                isFeatured ? "border-primary" : "border-border hover:border-primary/40"
-              }`}
-            >
-              {isFeatured && (
-                <span className="text-xs font-bold text-primary mb-3">✦ Terlaris</span>
-              )}
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Icon className="w-5 h-5 text-primary" />
-              </div>
-              <h3 className="font-display text-xl">{p.name}</h3>
-              <p className="text-sm text-muted-foreground mt-1 flex-1">{p.desc}</p>
-              <div className="mt-4 flex items-end justify-between">
-                <span className="font-display text-2xl text-primary">{formatIDR(p.price)}</span>
-                <a
-                  href="#booking"
-                  onClick={() => setPackageId(p.id)}
-                  className="text-sm font-medium text-primary hover:underline"
-                >
-                  Pesan →
-                </a>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function WhyUsSection() {
-  return (
-    <section className="py-10">
-      <div className="grid md:grid-cols-3 gap-6">
-        {[
-          {
-            stat: "14",
-            unit: "tahun",
-            desc: "Berpengalaman menangani berbagai kebutuhan — dari punggung pegal sampai pijat bayi newborn.",
-          },
-          {
-            stat: "2",
-            unit: "opsi lokasi",
-            desc: "Datang ke tempat kami yang tenang, atau kami yang ke rumahmu. Biaya panggilan terjangkau.",
-          },
-          {
-            stat: "WA",
-            unit: "konfirmasi cepat",
-            desc: "Jadwal fleksibel, konfirmasi langsung lewat WhatsApp. Tidak perlu download app apapun.",
-          },
-        ].map((f) => (
-          <div key={f.stat} className="p-6 rounded-xl bg-card border border-border">
-            <div className="font-display text-5xl text-primary leading-none">{f.stat}</div>
-            <div className="text-xs font-semibold text-muted-foreground mt-1 mb-3 uppercase tracking-wide">
-              {f.unit}
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function TestimonialsSection() {
-  const testimonials = [
-    {
-      name: "Ibu Rani",
-      text: "Pijat bayi-nya luar biasa lembut. Si kecil langsung tidur nyenyak setelahnya. Terapisnya juga sabar banget jelasin cara pijat yang bener.",
-      role: "Klien Pijat Bayi",
-    },
-    {
-      name: "Pak Dimas",
-      text: "Setelah duduk di depan laptop seharian, pijat capek ini benar-benar menyelamatkan punggung saya.",
-      role: "Klien Pijat Capek",
-    },
-    {
-      name: "Ibu Sari",
-      text: "Paket ibu & bayi sangat lengkap. Terapisnya ramah dan sangat sabar.",
-      role: "Klien Paket Ibu & Bayi",
-    },
-  ];
-
-  return (
-    <section className="py-10">
-      <h2 className="font-display text-3xl md:text-4xl mb-8">Kata mereka</h2>
-      <div className="grid md:grid-cols-2 gap-4">
-        <figure className="bg-card rounded-xl p-7 border border-border md:row-span-2 flex flex-col">
-          <Quote className="w-7 h-7 text-primary/40" />
-          <blockquote className="mt-4 font-display italic text-xl text-foreground/90 leading-relaxed flex-1">
-            "{testimonials[0].text}"
-          </blockquote>
-          <figcaption className="mt-6 text-sm">
-            <div className="font-medium">{testimonials[0].name}</div>
-            <div className="text-muted-foreground text-xs mt-0.5">{testimonials[0].role}</div>
-          </figcaption>
-        </figure>
-        {testimonials.slice(1).map((t) => (
-          <figure key={t.name} className="bg-card rounded-xl p-5 border border-border">
-            <blockquote className="text-sm text-foreground/90 leading-relaxed">"{t.text}"</blockquote>
-            <figcaption className="mt-4 text-xs">
-              <div className="font-medium">{t.name}</div>
-              <div className="text-muted-foreground mt-0.5">{t.role}</div>
-            </figcaption>
-          </figure>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-type BookingFormProps = {
-  packageId: PackageId; setPackageId: (id: PackageId) => void;
-  serviceType: "tempat" | "rumah"; setServiceType: (v: "tempat" | "rumah") => void;
-  name: string; setName: (v: string) => void;
-  whatsapp: string; setWhatsapp: (v: string) => void;
-  address: string; setAddress: (v: string) => void;
-  date: string; setDate: (v: string) => void;
-  time: string | null; setTime: (v: string | null) => void;
-  takenSlots: string[]; total: number; submitting: boolean; submit: () => void;
-};
-
-function BookingFormSection(props: BookingFormProps) {
-  const {
-    packageId, setPackageId, serviceType, setServiceType,
-    name, setName, whatsapp, setWhatsapp, address, setAddress,
-    date, setDate, time, setTime, takenSlots, total, submitting, submit,
-  } = props;
-
-  return (
-    <section id="booking" className="pt-10">
-      <h2 className="font-display text-3xl md:text-4xl mb-6">Yuk, booking sekarang</h2>
-      <div className="bg-card rounded-xl p-6 md:p-8 space-y-8 max-w-3xl mx-auto border border-border">
         {/* Paket */}
-        <section>
-          <h3 className="font-semibold text-base mb-4">Paket apa?</h3>
-          <div className="grid gap-3 md:grid-cols-3">
-            {PACKAGES.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setPackageId(p.id)}
-                className={`text-left rounded-lg border-2 p-4 transition ${
-                  packageId === p.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                }`}
-              >
-                <div className="font-medium">{p.name}</div>
-                <div className="text-xs text-muted-foreground mt-1 min-h-8">{p.desc}</div>
-                <div className="mt-3 text-primary font-semibold">{formatIDR(p.price)}</div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Lokasi */}
-        <section>
-          <h3 className="font-semibold text-base mb-4">Mau ke mana?</h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {([
-              { id: "tempat" as const, label: "Datang ke Tempat", sub: "Tidak ada biaya tambahan", icon: MapPin },
-              { id: "rumah" as const, label: "Panggilan ke Rumah", sub: `+ ${formatIDR(SERVICE_FEE_HOME)}`, icon: Home },
-            ]).map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setServiceType(opt.id)}
-                className={`flex items-start gap-3 rounded-lg border-2 p-4 text-left transition ${
-                  serviceType === opt.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                }`}
-              >
-                <opt.icon className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <div className="font-medium">{opt.label}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{opt.sub}</div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Data */}
-        <section>
-          <h3 className="font-semibold text-base mb-4">Data kamu</h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={100}
-              placeholder="Nama lengkap"
-              className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-            <input
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d+]/g, ""))}
-              maxLength={20}
-              placeholder="Nomor WhatsApp (cth: 08123456789)"
-              className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-          {serviceType === "rumah" && (
-            <textarea
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              maxLength={500}
-              rows={3}
-              placeholder="Alamat lengkap (jalan, nomor rumah, patokan)"
-              className="mt-3 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          )}
-        </section>
-
-        {/* Waktu */}
-        <section>
-          <h3 className="font-semibold text-base mb-4">Kapan?</h3>
-          <div className="flex items-center gap-2 mb-4">
-            <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-            <input
-              type="date"
-              value={date}
-              min={todayISO()}
-              onChange={(e) => { setDate(e.target.value); setTime(null); }}
-              className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-            {TIME_SLOTS.map((slot) => {
-              const taken = takenSlots.includes(slot);
-              const sel = time === slot;
+        <section id="paket" className="py-8 border-b border-border">
+          <h2 className="font-semibold text-xl mb-5">Pilih paket</h2>
+          <div className="grid md:grid-cols-3 gap-3">
+            {PACKAGES.map((p) => {
+              const isFeatured = p.id === "paket-ibu-bayi";
               return (
-                <button
-                  key={slot}
-                  type="button"
-                  disabled={taken}
-                  onClick={() => setTime(slot)}
-                  className={`py-2 rounded-lg text-sm font-medium transition border ${
-                    taken
-                      ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border line-through"
-                      : sel
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background border-border hover:border-primary"
+                <div
+                  key={p.id}
+                  className={`bg-card rounded-lg p-5 border-2 flex flex-col transition ${
+                    isFeatured ? "border-primary" : "border-border hover:border-primary/40"
                   }`}
                 >
-                  {slot}
-                </button>
+                  {isFeatured && (
+                    <span className="text-xs font-semibold text-primary mb-2">Terlaris</span>
+                  )}
+                  <h3 className="font-semibold text-base">{p.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1 flex-1">{p.desc}</p>
+                  <div className="mt-3 flex items-end justify-between">
+                    <span className="font-semibold text-lg text-primary">{formatIDR(p.price)}</span>
+                    <a
+                      href="#booking"
+                      onClick={() => setPackageId(p.id)}
+                      className="text-sm font-medium text-primary hover:underline"
+                    >
+                      Pesan
+                    </a>
+                  </div>
+                </div>
               );
             })}
           </div>
         </section>
 
-        {/* Total */}
-        <section className="border-t border-border pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-muted-foreground">Total</span>
-            <span className="font-display text-2xl text-primary">{formatIDR(total)}</span>
+        {/* Kenapa Kami */}
+        <section className="py-8 border-b border-border">
+          <h2 className="font-semibold text-xl mb-5">Kenapa pilih kami</h2>
+          <div className="grid md:grid-cols-3 gap-3">
+            {[
+              {
+                title: "14 tahun pengalaman",
+                desc: "Menangani berbagai kebutuhan pijat — dari ibu pasca melahirkan sampai pijat bayi newborn.",
+              },
+              {
+                title: "2 opsi lokasi",
+                desc: "Datang ke tempat kami atau kami yang ke rumah Anda. Biaya panggilan terjangkau.",
+              },
+              {
+                title: "Konfirmasi via WhatsApp",
+                desc: "Jadwal fleksibel, konfirmasi langsung lewat WhatsApp. Tidak perlu download aplikasi.",
+              },
+            ].map((f) => (
+              <div key={f.title} className="p-5 rounded-lg bg-card border border-border">
+                <div className="font-semibold text-sm text-foreground">{f.title}</div>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
           </div>
-          <button
-            onClick={submit}
-            disabled={submitting}
-            className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition disabled:opacity-60"
-          >
-            {submitting ? "Memproses..." : "Pesan sekarang"}
-          </button>
-          <p className="text-xs text-muted-foreground text-center mt-3">
-            Terapis akan kabarin kamu via WhatsApp untuk konfirmasi.
-          </p>
         </section>
-      </div>
-    </section>
+
+        {/* Testimoni */}
+        <section className="py-8 border-b border-border">
+          <h2 className="font-semibold text-xl mb-5">Kata pelanggan</h2>
+          <div className="grid md:grid-cols-2 gap-3">
+            {[
+              {
+                name: "Ibu Rani",
+                text: "Pijat bayinya sangat lembut. Anak saya langsung tidur nyenyak setelahnya. Terapisnya juga sabar menjelaskan cara pijat yang benar.",
+                role: "Pijat Bayi",
+              },
+              {
+                name: "Ibu Sari",
+                text: "Paket ibu & bayi sangat lengkap dan terapisnya ramah. Sudah berlangganan 3 bulan, selalu puas.",
+                role: "Paket Ibu & Bayi",
+              },
+              {
+                name: "Ibu Dina",
+                text: "Punggung dan bahu terasa lebih ringan setelah pijat capek. Pelayanannya profesional dan tepat waktu.",
+                role: "Pijat Capek",
+              },
+            ].map((t) => (
+              <figure key={t.name} className="bg-card rounded-lg p-5 border border-border">
+                <blockquote className="text-sm text-foreground/90 leading-relaxed">"{t.text}"</blockquote>
+                <figcaption className="mt-3 text-xs">
+                  <div className="font-medium">{t.name}</div>
+                  <div className="text-muted-foreground mt-0.5">{t.role}</div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+
+        {/* Form Booking */}
+        <section id="booking" className="pt-8">
+          <h2 className="font-semibold text-xl mb-5">Form Booking</h2>
+          <div className="bg-card rounded-lg p-5 md:p-7 space-y-7 border border-border">
+            {/* Paket */}
+            <div>
+              <h3 className="font-medium text-sm mb-3">Pilih paket</h3>
+              <div className="grid gap-2 md:grid-cols-3">
+                {PACKAGES.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setPackageId(p.id)}
+                    className={`text-left rounded-lg border-2 p-3 transition ${
+                      packageId === p.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <div className="font-medium text-sm">{p.name}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{p.desc}</div>
+                    <div className="mt-2 text-primary font-semibold text-sm">{formatIDR(p.price)}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Lokasi */}
+            <div>
+              <h3 className="font-medium text-sm mb-3">Lokasi layanan</h3>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {([
+                  { id: "tempat" as const, label: "Datang ke Tempat", sub: "Tidak ada biaya tambahan", icon: MapPin },
+                  { id: "rumah" as const, label: "Panggilan ke Rumah", sub: `+ ${formatIDR(SERVICE_FEE_HOME)}`, icon: Home },
+                ]).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setServiceType(opt.id)}
+                    className={`flex items-start gap-3 rounded-lg border-2 p-3 text-left transition ${
+                      serviceType === opt.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <opt.icon className="w-4 h-4 text-primary mt-0.5" />
+                    <div>
+                      <div className="font-medium text-sm">{opt.label}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{opt.sub}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Data */}
+            <div>
+              <h3 className="font-medium text-sm mb-3">Data Anda</h3>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  maxLength={100}
+                  placeholder="Nama lengkap"
+                  className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <input
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d+]/g, ""))}
+                  maxLength={20}
+                  placeholder="Nomor WhatsApp (cth: 08123456789)"
+                  className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              {serviceType === "rumah" && (
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  maxLength={500}
+                  rows={3}
+                  placeholder="Alamat lengkap (jalan, nomor rumah, patokan)"
+                  className="mt-2 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              )}
+            </div>
+
+            {/* Waktu */}
+            <div>
+              <h3 className="font-medium text-sm mb-3">Pilih jadwal</h3>
+              <div className="flex items-center gap-2 mb-3">
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                <input
+                  type="date"
+                  value={date}
+                  min={todayISO()}
+                  onChange={(e) => { setDate(e.target.value); setTime(null); }}
+                  className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {TIME_SLOTS.map((slot) => {
+                  const taken = takenSlots.includes(slot);
+                  const sel = time === slot;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      disabled={taken}
+                      onClick={() => setTime(slot)}
+                      className={`py-2 rounded-lg text-sm font-medium transition border ${
+                        taken
+                          ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border line-through"
+                          : sel
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background border-border hover:border-primary"
+                      }`}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Total */}
+            <div className="border-t border-border pt-5">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-muted-foreground text-sm">Total</span>
+                <span className="font-semibold text-xl text-primary">{formatIDR(total)}</span>
+              </div>
+              <button
+                onClick={submit}
+                disabled={submitting}
+                className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition disabled:opacity-60"
+              >
+                {submitting ? "Memproses..." : "Kirim Booking"}
+              </button>
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                Terapis akan menghubungi Anda via WhatsApp untuk konfirmasi.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+      <Toaster />
+    </div>
   );
 }

@@ -1,9 +1,24 @@
 export type PackageId = "pijat-capek" | "pijat-bayi" | "paket-ibu-bayi";
 
 export const PACKAGES: { id: PackageId; name: string; price: number; desc: string }[] = [
-  { id: "pijat-capek", name: "Pijat Capek", price: 75000, desc: "Relaksasi tubuh setelah hari yang panjang" },
-  { id: "pijat-bayi", name: "Pijat Bayi", price: 50000, desc: "Pijat lembut untuk tumbuh kembang si kecil" },
-  { id: "paket-ibu-bayi", name: "Paket Ibu & Bayi", price: 1500000, desc: "Paket perawatan lengkap untuk ibu dan bayi" },
+  {
+    id: "pijat-capek",
+    name: "Pijat Capek",
+    price: 75000,
+    desc: "Meredakan pegal di punggung, bahu, dan kaki setelah seharian beraktivitas.",
+  },
+  {
+    id: "pijat-bayi",
+    name: "Pijat Bayi",
+    price: 50000,
+    desc: "Pijat lembut untuk mendukung tumbuh kembang dan kenyamanan si kecil.",
+  },
+  {
+    id: "paket-ibu-bayi",
+    name: "Paket Ibu & Bayi",
+    price: 1500000,
+    desc: "Perawatan lengkap untuk ibu dan bayi selama 1 bulan (kunjungan rutin).",
+  },
 ];
 
 export const SERVICE_FEE_HOME = 15000;
