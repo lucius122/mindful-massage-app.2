@@ -37,3 +37,9 @@ $$;
 CREATE TRIGGER bookings_log_trigger
 AFTER INSERT OR UPDATE ON public.bookings
 FOR EACH ROW EXECUTE FUNCTION public.log_booking_change();
+
+CREATE POLICY "Trigger can insert logs"
+  ON public.booking_logs FOR INSERT
+  WITH CHECK (true);
+
+COMMENT ON FUNCTION public.log_booking_change() IS 'Auto-logs booking events: booking_baru on insert, dikonfirmasi/dibatalkan on status change.';
