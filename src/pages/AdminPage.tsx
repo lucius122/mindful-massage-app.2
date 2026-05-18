@@ -97,7 +97,9 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <span className="font-semibold text-sm text-foreground">Pijat Bunda WIN</span>
+          <a href="/" className="font-semibold text-sm text-foreground hover:text-primary transition-colors inline-flex items-center gap-2">
+            Pijat Bunda WIN <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-medium text-muted-foreground">Beranda</span>
+          </a>
           <button
             onClick={() => supabase.auth.signOut()}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition"
@@ -423,6 +425,12 @@ function AdminLogin() {
             >
               {loading ? "Memuat..." : "Masuk"}
             </button>
+            
+            <div className="pt-2">
+              <a href="/" className="block w-full text-center py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                ← Kembali ke Beranda
+              </a>
+            </div>
           </form>
         </div>
       </div>
