@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { PACKAGES, SERVICE_FEE_HOME, TIME_SLOTS, formatIDR, type PackageId } from "@/lib/bookings";
+import { PACKAGES, SERVICE_FEE_HOME, getAvailableTimeSlots, calculateMonthlyDates, formatIDR, type PackageId } from "@/lib/bookings";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { CheckCircle2, MapPin, Home, Calendar as CalendarIcon } from "lucide-react";
+import { CheckCircle2, MapPin, Home, Calendar as CalendarIcon, Clock } from "lucide-react";
 
 function todayISO() {
   const d = new Date();
@@ -21,6 +20,8 @@ export default function BookingPage() {
   const [address, setAddress] = useState("");
   const [date, setDate] = useState(todayISO());
   const [time, setTime] = useState<string | null>(null);
+  const [day1, setDay1] = useState<number>(1);
+  const [day2, setDay2] = useState<number>(4);
   const [takenSlots, setTakenSlots] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -69,18 +70,55 @@ export default function BookingPage() {
   const submit = async () => {
     if (!name.trim() || !whatsapp.trim()) return toast.error("Nama dan nomor WhatsApp wajib diisi");
     if (serviceType === "rumah" && !address.trim()) return toast.error("Alamat wajib diisi untuk panggilan ke rumah");
-    if (!time) return toast.error("Pilih waktu booking");
+    
+    let submitTime = time;
+    if (packageId === "pijat-bayi" || packageId === "paket-ibu-bayi") {
+      submitTime = "06:00";
+    }
+    
+    if (!submitTime && packageId === "pijat-capek") return toast.error("Pilih waktu booking");
+
     setSubmitting(true);
-    const { error } = await supabase.from("bookings").insert({
-      customer_name: name.trim(), whatsapp_number: whatsapp.trim(),
-      address: serviceType === "rumah" ? address.trim() : null,
-      package_name: pkg.name,
-      service_type: serviceType === "rumah" ? "Panggilan ke Rumah" : "Datang ke Tempat",
-      total_price: total, booking_date: date, booking_time: time, status: "pending",
-    });
+
+    let bookingsToInsert: any[] = [];
+    const baseAddress = serviceType === "rumah" ? address.trim() : null;
+    const baseServiceType = serviceType === "rumah" ? "Panggilan ke Rumah" : "Datang ke Tempat";
+
+    if (packageId === "paket-ibu-bayi") {
+      const dates = calculateMonthlyDates(date, day1, day2);
+      bookingsToInsert = dates.map((d, i) => ({
+        customer_name: name.trim(),
+        whatsapp_number: whatsapp.trim(),
+        address: baseAddress,
+        package_name: `${pkg.name} (Kunjungan ${i + 1}/8)`,
+        service_type: baseServiceType,
+        total_price: i === 0 ? total : 0,
+        booking_date: d,
+        booking_time: "06:00",
+        status: "pending",
+      }));
+    } else {
+      bookingsToInsert = [{
+        customer_name: name.trim(),
+        whatsapp_number: whatsapp.trim(),
+        address: baseAddress,
+        package_name: pkg.name,
+        service_type: baseServiceType,
+        total_price: total,
+        booking_date: date,
+        booking_time: submitTime,
+        status: "pending",
+      }];
+    }
+
+    const { error } = await supabase.from("bookings").insert(bookingsToInsert);
+    
     setSubmitting(false);
     if (error) { toast.error("Gagal menyimpan booking: " + error.message); return; }
-    setTakenSlots((s) => [...s, time]);
+    
+    if (packageId !== "paket-ibu-bayi" && date === bookingsToInsert[0].booking_date) {
+        setTakenSlots((s) => [...s, submitTime!]);
+    }
     setSuccess(true);
   };
 
@@ -97,7 +135,7 @@ export default function BookingPage() {
           </p>
           <div className="mt-6 p-4 rounded-lg bg-muted text-left text-sm space-y-1.5">
             <div><span className="text-muted-foreground">Paket:</span> {pkg.name}</div>
-            <div><span className="text-muted-foreground">Jadwal:</span> {date} • {time}</div>
+            <div><span className="text-muted-foreground">Jadwal:</span> {packageId === "paket-ibu-bayi" ? `Mulai ${date} (8 Kunjungan)` : `${date} • ${packageId === "pijat-bayi" ? "06:00" : time}`}</div>
             <div><span className="text-muted-foreground">Total:</span> {formatIDR(total)}</div>
           </div>
           <button
@@ -320,42 +358,101 @@ export default function BookingPage() {
             </div>
 
             {/* Waktu */}
-            <div>
-              <h3 className="font-medium text-sm mb-3">Pilih jadwal</h3>
-              <div className="flex items-center gap-2 mb-3">
-                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                <input
-                  type="date"
-                  value={date}
-                  min={todayISO()}
-                  onChange={(e) => { setDate(e.target.value); setTime(null); }}
-                  className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
+            {packageId === "paket-ibu-bayi" ? (
+              <div>
+                <h3 className="font-medium text-sm mb-3">Pilih jadwal rutinan</h3>
+                <div className="grid gap-3 sm:grid-cols-2 mb-4">
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Hari Kunjungan 1</label>
+                    <select value={day1} onChange={(e) => setDay1(Number(e.target.value))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                      {["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"].map((d, i) => (
+                        <option key={i} value={i}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Hari Kunjungan 2</label>
+                    <select value={day2} onChange={(e) => setDay2(Number(e.target.value))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                      {["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"].map((d, i) => (
+                        <option key={i} value={i}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="text-xs text-muted-foreground block mb-1">Tanggal Mulai (Kunjungan Pertama)</label>
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="date"
+                      value={date}
+                      min={todayISO()}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                </div>
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary/90 flex gap-2 items-start">
+                  <Clock className="w-4 h-4 mt-0.5 shrink-0" />
+                  <div>Jadwal otomatis dikunci pada jam <strong>06:00</strong> pagi untuk Paket Ibu & Bayi. Sistem akan menjadwalkan 8 kunjungan ke depan.</div>
+                </div>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {TIME_SLOTS.map((slot) => {
-                  const taken = takenSlots.includes(slot);
-                  const sel = time === slot;
-                  return (
-                    <button
-                      key={slot}
-                      type="button"
-                      disabled={taken}
-                      onClick={() => setTime(slot)}
-                      className={`py-2 rounded-lg text-sm font-medium transition border ${
-                        taken
-                          ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border line-through"
-                          : sel
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background border-border hover:border-primary"
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  );
-                })}
+            ) : packageId === "pijat-bayi" ? (
+              <div>
+                <h3 className="font-medium text-sm mb-3">Pilih jadwal</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="date"
+                    value={date}
+                    min={todayISO()}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary/90 flex gap-2 items-start">
+                  <Clock className="w-4 h-4 mt-0.5 shrink-0" />
+                  <div>Jadwal Pijat Bayi secara otomatis dikunci pada jam <strong>06:00</strong> pagi.</div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                <h3 className="font-medium text-sm mb-3">Pilih jadwal</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="date"
+                    value={date}
+                    min={todayISO()}
+                    onChange={(e) => { setDate(e.target.value); setTime(null); }}
+                    className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                  {getAvailableTimeSlots(date, packageId).map((slot) => {
+                    const taken = takenSlots.includes(slot);
+                    const sel = time === slot;
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        disabled={taken}
+                        onClick={() => setTime(slot)}
+                        className={`py-2 rounded-lg text-sm font-medium transition border ${
+                          taken
+                            ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border line-through"
+                            : sel
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background border-border hover:border-primary"
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Total */}
             <div className="border-t border-border pt-5">
