@@ -28,13 +28,8 @@ export const SERVICE_FEE_HOME = 15000;
  * - Jarak antar jam: 2 jam (06, 08, 10, 12, 14, 16, 18, 20)
  * - Kamis (4): max jam 14:00 (slot: 06, 08, 10, 12, 14)
  * - Jumat (5): mulai jam 16:00 (slot: 16, 18, 20)
- * - Pijat Bayi / Paket Ibu Bayi: selalu 06:00
  */
-export const getAvailableTimeSlots = (dateStr: string, packageId: PackageId): string[] => {
-  if (packageId === "pijat-bayi" || packageId === "paket-ibu-bayi") {
-    return ["06:00"];
-  }
-
+export const getAvailableTimeSlots = (dateStr: string, _packageId?: PackageId): string[] => {
   const d = new Date(dateStr);
   const dayOfWeek = d.getDay(); // 0 (Sun) to 6 (Sat)
   

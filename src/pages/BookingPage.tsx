@@ -71,12 +71,9 @@ export default function BookingPage() {
     if (!name.trim() || !whatsapp.trim()) return toast.error("Nama dan nomor WhatsApp wajib diisi");
     if (serviceType === "rumah" && !address.trim()) return toast.error("Alamat wajib diisi untuk panggilan ke rumah");
     
-    let submitTime = time;
-    if (packageId === "pijat-bayi" || packageId === "paket-ibu-bayi") {
-      submitTime = "06:00";
-    }
+    const submitTime = time;
     
-    if (!submitTime && packageId === "pijat-capek") return toast.error("Pilih waktu booking");
+    if (!submitTime) return toast.error("Pilih waktu booking");
 
     setSubmitting(true);
 
@@ -94,7 +91,7 @@ export default function BookingPage() {
         service_type: baseServiceType,
         total_price: i === 0 ? total : 0,
         booking_date: d,
-        booking_time: "06:00",
+        booking_time: submitTime,
         status: "pending",
       }));
     } else {
@@ -135,7 +132,7 @@ export default function BookingPage() {
           </p>
           <div className="mt-6 p-4 rounded-lg bg-muted text-left text-sm space-y-1.5">
             <div><span className="text-muted-foreground">Paket:</span> {pkg.name}</div>
-            <div><span className="text-muted-foreground">Jadwal:</span> {packageId === "paket-ibu-bayi" ? `Mulai ${date} (8 Kunjungan)` : `${date} • ${packageId === "pijat-bayi" ? "06:00" : time}`}</div>
+            <div><span className="text-muted-foreground">Jadwal:</span> {packageId === "paket-ibu-bayi" ? `Mulai ${date} • ${time} (8 Kunjungan)` : `${date} • ${time}`}</div>
             <div><span className="text-muted-foreground">Total:</span> {formatIDR(total)}</div>
           </div>
           <button
@@ -358,7 +355,7 @@ export default function BookingPage() {
             </div>
 
             {/* Waktu */}
-            {packageId === "paket-ibu-bayi" ? (
+            {packageId === "paket-ibu-bayi" && (
               <div>
                 <h3 className="font-medium text-sm mb-3">Pilih jadwal rutinan</h3>
                 <div className="grid gap-3 sm:grid-cols-2 mb-4">
@@ -379,7 +376,7 @@ export default function BookingPage() {
                     </select>
                   </div>
                 </div>
-                <div className="mb-3">
+                <div className="mb-4">
                   <label className="text-xs text-muted-foreground block mb-1">Tanggal Mulai (Kunjungan Pertama)</label>
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="w-4 h-4 text-muted-foreground" />
@@ -387,35 +384,19 @@ export default function BookingPage() {
                       type="date"
                       value={date}
                       min={todayISO()}
-                      onChange={(e) => setDate(e.target.value)}
+                      onChange={(e) => { setDate(e.target.value); setTime(null); }}
                       className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
                 </div>
-                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary/90 flex gap-2 items-start">
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary/90 flex gap-2 items-start mb-4">
                   <Clock className="w-4 h-4 mt-0.5 shrink-0" />
-                  <div>Jadwal otomatis dikunci pada jam <strong>06:00</strong> pagi untuk Paket Ibu & Bayi. Sistem akan menjadwalkan 8 kunjungan ke depan.</div>
+                  <div>Sistem akan menjadwalkan 8 kunjungan ke depan. Pilih jam kunjungan di bawah.</div>
                 </div>
               </div>
-            ) : packageId === "pijat-bayi" ? (
-              <div>
-                <h3 className="font-medium text-sm mb-3">Pilih jadwal</h3>
-                <div className="flex items-center gap-2 mb-3">
-                  <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="date"
-                    value={date}
-                    min={todayISO()}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary/90 flex gap-2 items-start">
-                  <Clock className="w-4 h-4 mt-0.5 shrink-0" />
-                  <div>Jadwal Pijat Bayi secara otomatis dikunci pada jam <strong>06:00</strong> pagi.</div>
-                </div>
-              </div>
-            ) : (
+            )}
+
+            {packageId !== "paket-ibu-bayi" && (
               <div>
                 <h3 className="font-medium text-sm mb-3">Pilih jadwal</h3>
                 <div className="flex items-center gap-2 mb-3">
@@ -428,31 +409,35 @@ export default function BookingPage() {
                     className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                  {getAvailableTimeSlots(date, packageId).map((slot) => {
-                    const taken = takenSlots.includes(slot);
-                    const sel = time === slot;
-                    return (
-                      <button
-                        key={slot}
-                        type="button"
-                        disabled={taken}
-                        onClick={() => setTime(slot)}
-                        className={`py-2 rounded-lg text-sm font-medium transition border ${
-                          taken
-                            ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border line-through"
-                            : sel
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-background border-border hover:border-primary"
-                        }`}
-                      >
-                        {slot}
-                      </button>
-                    );
-                  })}
-                </div>
               </div>
             )}
+
+            <div>
+              <h3 className="font-medium text-sm mb-3">Pilih waktu</h3>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {getAvailableTimeSlots(date, packageId).map((slot) => {
+                  const taken = takenSlots.includes(slot);
+                  const sel = time === slot;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      disabled={taken}
+                      onClick={() => setTime(slot)}
+                      className={`py-2 rounded-lg text-sm font-medium transition border ${
+                        taken
+                          ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border line-through"
+                          : sel
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background border-border hover:border-primary"
+                      }`}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             {/* Total */}
             <div className="border-t border-border pt-5">
