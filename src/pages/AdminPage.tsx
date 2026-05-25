@@ -74,10 +74,24 @@ export default function AdminPage() {
     else toast.success(status === "confirmed" ? "Booking dikonfirmasi" : "Booking dibatalkan");
   };
 
+  const formatBookingDate = (dateStr: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(dateStr + "T00:00:00");
+    target.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+    if (diffDays === 0) return "Hari ini";
+    if (diffDays === 1) return "Besok";
+    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    return `${days[target.getDay()]}, ${target.getDate()} ${months[target.getMonth()]} ${target.getFullYear()}`;
+  };
+
   const waLink = (b: Booking) => {
     const clean = b.whatsapp_number.replace(/\D/g, "").replace(/^0/, "62");
     const addressLine = b.address ? `\nAlamat: ${b.address}\nApakah alamat tersebut sudah sesuai?` : "";
-    const msg = `Permisi, apakah benar ini dengan ${b.customer_name}?\n\nKami dari Pijat Bunda WIN ingin mengonfirmasi booking Anda:\n📋 Paket: ${b.package_name}\n📅 Jadwal: ${b.booking_date} • ${b.booking_time}\n💰 Total: ${formatIDR(b.total_price)}${addressLine}\n\nTerima kasih 🙏`;
+    const jadwal = formatBookingDate(b.booking_date);
+    const msg = `Permisi, apakah benar ini dengan ${b.customer_name}?\n\nKami dari Pijat Bunda WIN ingin mengonfirmasi booking Anda:\n📋 Paket: ${b.package_name}\n📅 Jadwal: ${jadwal} • ${b.booking_time}\n💰 Total: ${formatIDR(b.total_price)}${addressLine}\n\nTerima kasih 🙏`;
     return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
   };
 
@@ -166,7 +180,7 @@ export default function AdminPage() {
               <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                 <div><div className="text-xs text-muted-foreground">Paket</div><div className="font-medium">{b.package_name}</div></div>
                 <div><div className="text-xs text-muted-foreground">Total</div><div className="font-medium text-primary">{formatIDR(b.total_price)}</div></div>
-                <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Clock className="w-3.5 h-3.5" /> {b.booking_date} • {b.booking_time}</div>
+                <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Clock className="w-3.5 h-3.5" /> {formatBookingDate(b.booking_date)} • {b.booking_time}</div>
                 <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                   {b.service_type.includes("Rumah") ? <HomeIcon className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}{b.service_type}
                 </div>
