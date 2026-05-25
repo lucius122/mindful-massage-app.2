@@ -74,9 +74,11 @@ export default function AdminPage() {
     else toast.success(status === "confirmed" ? "Booking dikonfirmasi" : "Booking dibatalkan");
   };
 
-  const waLink = (num: string) => {
-    const clean = num.replace(/\D/g, "").replace(/^0/, "62");
-    return `https://wa.me/${clean}`;
+  const waLink = (b: Booking) => {
+    const clean = b.whatsapp_number.replace(/\D/g, "").replace(/^0/, "62");
+    const addressLine = b.address ? `\nAlamat: ${b.address}\nApakah alamat tersebut sudah sesuai?` : "";
+    const msg = `Permisi, apakah benar ini dengan ${b.customer_name}?\n\nKami dari Pijat Bunda WIN ingin mengonfirmasi booking Anda:\n📋 Paket: ${b.package_name}\n📅 Jadwal: ${b.booking_date} • ${b.booking_time}\n💰 Total: ${formatIDR(b.total_price)}${addressLine}\n\nTerima kasih 🙏`;
+    return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
   };
 
   const filtered = filter === "all" ? bookings : bookings.filter((b) => b.status === filter);
@@ -175,7 +177,7 @@ export default function AdminPage() {
                 </div>
               )}
               <div className="mt-4 flex flex-wrap gap-2">
-                <a href={waLink(b.whatsapp_number)} target="_blank" rel="noreferrer"
+                <a href={waLink(b)} target="_blank" rel="noreferrer"
                   className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-success text-success-foreground text-sm font-medium hover:opacity-90 transition">
                   <MessageCircle className="w-4 h-4" /> Hubungi Pelanggan
                 </a>
