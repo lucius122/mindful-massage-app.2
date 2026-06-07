@@ -153,11 +153,17 @@ export default function AdminPage() {
     return `${days[target.getDay()]}, ${target.getDate()} ${MONTH_NAMES[target.getMonth()]} ${target.getFullYear()}`;
   };
 
+  const MAPS_LINK = "https://maps.app.goo.gl/5tthPAxTssqc9Lwe9";
+  const ALAMAT_TEMPAT = "Perum Kayon Asri 2, Blk. B No.8, Batursari, Mranggen, Kab. Demak";
+
   const waLink = (b: Booking) => {
     const clean = b.whatsapp_number.replace(/\D/g, "").replace(/^0/, "62");
-    const addressLine = b.address ? `\nAlamat: ${b.address}\nApakah alamat tersebut sudah sesuai?` : "";
+    const isDatangKeTempat = b.service_type.toLowerCase().includes("tempat");
+    const locationLine = isDatangKeTempat
+      ? `\n📍 Lokasi kami: ${ALAMAT_TEMPAT}\n🗺️ Google Maps: ${MAPS_LINK}`
+      : b.address ? `\nAlamat: ${b.address}\nApakah alamat tersebut sudah sesuai?` : "";
     const jadwal = formatBookingDate(b.booking_date);
-    const msg = `Permisi, apakah benar ini dengan ${b.customer_name}?\n\nKami dari Pijat Bunda WIN ingin mengonfirmasi booking Anda:\n📋 Paket: ${b.package_name}\n📅 Jadwal: ${jadwal} • ${b.booking_time}\n💰 Total: ${formatIDR(b.total_price)}${addressLine}\n\nTerima kasih 🙏`;
+    const msg = `Permisi, apakah benar ini dengan ${b.customer_name}?\n\nKami dari Pijat Bunda WIN ingin mengonfirmasi booking Anda:\n📋 Paket: ${b.package_name}\n📅 Jadwal: ${jadwal} • ${b.booking_time}\n💰 Total: ${formatIDR(b.total_price)}${locationLine}\n\nTerima kasih 🙏`;
     return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
   };
 

@@ -164,13 +164,13 @@ export default function BookingPage() {
         <section className="py-8 border-b border-border">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
             <MapPin className="w-3 h-3" />
-            Melayani area Semarang
+            Melayani area Semarang Timur, Batursari &amp; sekitarnya
           </div>
           <h1 className="font-bold text-3xl md:text-4xl text-foreground leading-tight">
-            Layanan pijat khusus<br />perempuan & bayi
+            Layanan pijat khusus<br />perempuan &amp; bayi
           </h1>
           <p className="mt-3 text-muted-foreground max-w-lg leading-relaxed">
-            Berpengalaman 14 tahun melayani pijat untuk ibu dan bayi di Semarang. Bisa datang ke tempat kami atau kami ke rumah Anda.
+            Berpengalaman 14 tahun melayani pijat untuk ibu dan bayi. Bisa datang ke tempat kami di Batursari, Mranggen, atau kami yang ke rumah Anda.
           </p>
           <a
             href="#booking"
@@ -272,6 +272,36 @@ export default function BookingPage() {
           </div>
         </section>
 
+        {/* Lokasi Kami */}
+        <section className="py-8 border-b border-border">
+          <h2 className="font-semibold text-xl mb-2">Lokasi kami</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Perum Kayon Asri 2, Blk. B No.8, Batursari, Kec. Mranggen, Kab. Demak
+          </p>
+          {/* Map embed */}
+          <div className="rounded-xl overflow-hidden border border-border" style={{ height: 260 }}>
+            <iframe
+              title="Lokasi Pijat Bunda WIN"
+              src="https://maps.google.com/maps?q=Perum+Kayon+Asri+2+Blok+B+No+8+Batursari+Mranggen+Demak&output=embed&z=16"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+          <a
+            href="https://maps.app.goo.gl/5tthPAxTssqc9Lwe9"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-primary hover:underline"
+          >
+            <MapPin className="w-4 h-4" />
+            Buka di Google Maps
+          </a>
+        </section>
+
         {/* Form Booking */}
         <section id="booking" className="pt-8">
           <h2 className="font-semibold text-xl mb-5">Form Booking</h2>
@@ -302,8 +332,8 @@ export default function BookingPage() {
               <h3 className="font-medium text-sm mb-3">Lokasi layanan</h3>
               <div className="grid gap-2 sm:grid-cols-2">
                 {([
-                  { id: "tempat" as const, label: "Datang ke Tempat", sub: "Tidak ada biaya tambahan · Semarang", icon: MapPin },
-                  { id: "rumah" as const, label: "Panggilan ke Rumah", sub: `+ ${formatIDR(SERVICE_FEE_HOME)} · Area Semarang`, icon: Home },
+                  { id: "tempat" as const, label: "Datang ke Tempat", sub: "Tidak ada biaya tambahan · Batursari, Mranggen", icon: MapPin },
+                  { id: "rumah" as const, label: "Panggilan ke Rumah", sub: `+ ${formatIDR(SERVICE_FEE_HOME)} · Semarang Timur & sekitarnya`, icon: Home },
                 ]).map((opt) => (
                   <button
                     key={opt.id}
