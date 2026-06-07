@@ -160,10 +160,10 @@ export default function AdminPage() {
     const clean = b.whatsapp_number.replace(/\D/g, "").replace(/^0/, "62");
     const isDatangKeTempat = b.service_type.toLowerCase().includes("tempat");
     const locationLine = isDatangKeTempat
-      ? `\n📍 Lokasi kami: ${ALAMAT_TEMPAT}\n🗺️ Google Maps: ${MAPS_LINK}`
+      ? `\nLokasi kami: ${ALAMAT_TEMPAT}\nGoogle Maps: ${MAPS_LINK}`
       : b.address ? `\nAlamat: ${b.address}\nApakah alamat tersebut sudah sesuai?` : "";
     const jadwal = formatBookingDate(b.booking_date);
-    const msg = `Permisi, apakah benar ini dengan ${b.customer_name}?\n\nKami dari Pijat Bunda WIN ingin mengonfirmasi booking Anda:\n📋 Paket: ${b.package_name}\n📅 Jadwal: ${jadwal} • ${b.booking_time}\n💰 Total: ${formatIDR(b.total_price)}${locationLine}\n\nTerima kasih 🙏`;
+    const msg = `Permisi, apakah benar ini dengan ${b.customer_name}?\n\nKami dari Pijat Bunda WIN ingin mengonfirmasi booking Anda:\nPaket: ${b.package_name}\nJadwal: ${jadwal} pukul ${b.booking_time}${locationLine}\n\nTerima kasih`;
     return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
   };
 
