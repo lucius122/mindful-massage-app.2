@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 import { formatIDR } from "@/lib/bookings";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { MessageCircle, Check, X, Clock, MapPin, Home as HomeIcon, LogOut, ChevronDown, Search } from "lucide-react";
+import { MessageCircle, Check, X, Clock, MapPin, Home as HomeIcon, LogOut, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 type Booking = {
   id: string;
@@ -34,6 +34,9 @@ type BookingLog = {
 type LogFilter = "today" | "all";
 
 const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+type Period = { month: number; year: number };
 
 export default function AdminPage() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -42,13 +45,14 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"booking" | "riwayat">("booking");
 
-  // Confirmed month/year filter
+  // Confirmed period filter — single state object
   const now = new Date();
-  const [cfMonth, setCfMonth] = useState(now.getMonth()); // 0-11
-  const [cfYear, setCfYear] = useState(now.getFullYear());
+  const [period, setPeriod] = useState<Period>({ month: now.getMonth(), year: now.getFullYear() });
   const [confirmedBookings, setConfirmedBookings] = useState<Booking[]>([]);
-  const [confirmedLoaded, setConfirmedLoaded] = useState(false);
   const [confirmedLoading, setConfirmedLoading] = useState(false);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(now.getFullYear());
+  const monthPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -79,34 +83,57 @@ export default function AdminPage() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // Load confirmed bookings by month/year on demand
-  const loadConfirmed = useCallback(async () => {
-    setConfirmedLoading(true);
-    const startDate = `${cfYear}-${String(cfMonth + 1).padStart(2, "0")}-01`;
-    const endMonth = cfMonth === 11 ? 0 : cfMonth + 1;
-    const endYear = cfMonth === 11 ? cfYear + 1 : cfYear;
-    const endDate = `${endYear}-${String(endMonth + 1).padStart(2, "0")}-01`;
-    const { data, error } = await supabase
-      .from("bookings").select("*")
-      .eq("status", "confirmed")
-      .gte("booking_date", startDate)
-      .lt("booking_date", endDate)
-      .order("booking_date", { ascending: true })
-      .order("booking_time", { ascending: true });
-    if (error) {
-      toast.error("Gagal memuat data dikonfirmasi");
-    } else {
-      setConfirmedBookings((data ?? []) as Booking[]);
-    }
-    setConfirmedLoaded(true);
-    setConfirmedLoading(false);
-  }, [cfMonth, cfYear]);
-
-  // Reset confirmed data when month/year changes
+  // Auto-fetch confirmed bookings whenever period changes
   useEffect(() => {
-    setConfirmedLoaded(false);
-    setConfirmedBookings([]);
-  }, [cfMonth, cfYear]);
+    if (filter !== "confirmed") return;
+    let cancelled = false;
+    const fetchConfirmed = async () => {
+      setConfirmedLoading(true);
+      const startDate = `${period.year}-${String(period.month + 1).padStart(2, "0")}-01`;
+      const nextMonth = period.month === 11 ? 0 : period.month + 1;
+      const nextYear = period.month === 11 ? period.year + 1 : period.year;
+      const endDate = `${nextYear}-${String(nextMonth + 1).padStart(2, "0")}-01`;
+      const { data, error } = await supabase
+        .from("bookings").select("*")
+        .eq("status", "confirmed")
+        .gte("booking_date", startDate)
+        .lt("booking_date", endDate)
+        .order("booking_date", { ascending: true })
+        .order("booking_time", { ascending: true });
+      if (cancelled) return;
+      if (error) {
+        toast.error("Gagal memuat data dikonfirmasi");
+      } else {
+        setConfirmedBookings((data ?? []) as Booking[]);
+      }
+      setConfirmedLoading(false);
+    };
+    fetchConfirmed();
+    return () => { cancelled = true; };
+  }, [filter, period]);
+
+  // Close month picker on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (monthPickerRef.current && !monthPickerRef.current.contains(e.target as Node)) {
+        setMonthPickerOpen(false);
+      }
+    };
+    if (monthPickerOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [monthPickerOpen]);
+
+  // Period navigation helpers
+  const prevPeriod = () => setPeriod((p) => p.month === 0 ? { month: 11, year: p.year - 1 } : { month: p.month - 1, year: p.year });
+  const nextPeriod = () => setPeriod((p) => p.month === 11 ? { month: 0, year: p.year + 1 } : { month: p.month + 1, year: p.year });
+  const selectMonth = (m: number) => {
+    setPeriod({ month: m, year: pickerYear });
+    setMonthPickerOpen(false);
+  };
+  const toggleMonthPicker = () => {
+    setPickerYear(period.year);
+    setMonthPickerOpen((v) => !v);
+  };
 
   const updateStatus = async (id: string, status: "confirmed" | "cancelled") => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
@@ -140,12 +167,9 @@ export default function AdminPage() {
     ? bookings
     : bookings.filter((b) => b.status === filter);
 
-  // Generate year options (2024 to current year + 1)
-  const yearOptions: number[] = [];
-  for (let y = 2024; y <= now.getFullYear() + 1; y++) yearOptions.push(y);
-
   // Calculate confirmed total for the loaded month
   const confirmedTotal = confirmedBookings.reduce((sum, b) => sum + b.total_price, 0);
+  const periodLabel = `${MONTH_NAMES[period.month]} ${period.year}`;
 
   if (session === undefined) {
     return (
@@ -203,7 +227,7 @@ export default function AdminPage() {
                 }`}
               >
                 {f === "all" ? "Semua" : f === "pending" ? "Menunggu" : f === "confirmed" ? "Dikonfirmasi" : "Dibatalkan"}
-                {" "}({f === "all" ? bookings.length : f === "confirmed" && confirmedLoaded ? confirmedBookings.length : bookings.filter((b) => b.status === f).length})
+                {" "}({f === "all" ? bookings.length : f === "confirmed" ? confirmedBookings.length : bookings.filter((b) => b.status === f).length})
               </button>
             ))}
           </div>
@@ -215,65 +239,97 @@ export default function AdminPage() {
           <LogFeed />
         ) : (
           <>
-            {/* Month/Year picker for confirmed tab */}
+            {/* Period navigator for confirmed tab */}
             {filter === "confirmed" && (
-              <div className="bg-card rounded-lg p-4 border border-border space-y-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="relative">
-                    <select
-                      value={cfMonth}
-                      onChange={(e) => setCfMonth(Number(e.target.value))}
-                      className="appearance-none pl-3 pr-8 py-2 rounded-lg border border-border bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+              <div className="bg-card rounded-lg p-4 border border-border">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  {/* Arrow navigation + month label */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={prevPeriod}
+                      aria-label="Bulan sebelumnya"
+                      className="w-10 h-10 rounded-full border border-border bg-background flex items-center justify-center hover:bg-muted hover:border-primary/40 active:scale-95 transition"
                     >
-                      {MONTH_NAMES.map((m, i) => (
-                        <option key={i} value={i}>{m}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
-                  </div>
-                  <div className="relative">
-                    <select
-                      value={cfYear}
-                      onChange={(e) => setCfYear(Number(e.target.value))}
-                      className="appearance-none pl-3 pr-8 py-2 rounded-lg border border-border bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+
+                    {/* Clickable period label → opens month picker */}
+                    <div className="relative" ref={monthPickerRef}>
+                      <button
+                        onClick={toggleMonthPicker}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-muted transition text-sm font-semibold"
+                      >
+                        <Calendar className="w-4 h-4 text-primary" />
+                        {periodLabel}
+                      </button>
+
+                      {/* Month picker popup */}
+                      {monthPickerOpen && (
+                        <div className="absolute left-0 top-full mt-2 z-30 w-64 bg-card rounded-xl border border-border shadow-lg p-4 animate-in fade-in slide-in-from-top-2 duration-150">
+                          {/* Year row */}
+                          <div className="flex items-center justify-between mb-3">
+                            <button
+                              onClick={() => setPickerYear((y) => y - 1)}
+                              aria-label="Tahun sebelumnya"
+                              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <span className="text-sm font-semibold">{pickerYear}</span>
+                            <button
+                              onClick={() => setPickerYear((y) => y + 1)}
+                              aria-label="Tahun berikutnya"
+                              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                          {/* Month grid */}
+                          <div className="grid grid-cols-4 gap-1.5">
+                            {MONTH_SHORT.map((m, i) => {
+                              const isActive = i === period.month && pickerYear === period.year;
+                              return (
+                                <button
+                                  key={i}
+                                  onClick={() => selectMonth(i)}
+                                  className={`py-2 rounded-lg text-xs font-medium transition ${
+                                    isActive
+                                      ? "bg-primary text-primary-foreground"
+                                      : "hover:bg-muted text-foreground"
+                                  }`}
+                                >
+                                  {m}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={nextPeriod}
+                      aria-label="Bulan berikutnya"
+                      className="w-10 h-10 rounded-full border border-border bg-background flex items-center justify-center hover:bg-muted hover:border-primary/40 active:scale-95 transition"
                     >
-                      {yearOptions.map((y) => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
                   </div>
-                  <button
-                    onClick={loadConfirmed}
-                    disabled={confirmedLoading}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition disabled:opacity-50"
-                  >
-                    <Search className="w-4 h-4" />
-                    {confirmedLoading ? "Memuat..." : "Tampilkan"}
-                  </button>
+
+                  {/* Summary */}
+                  {!confirmedLoading && (
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-semibold text-foreground">{confirmedBookings.length}</span> booking
+                      {" · "}
+                      <span className="font-semibold text-primary">{formatIDR(confirmedTotal)}</span>
+                    </div>
+                  )}
                 </div>
-                {confirmedLoaded && (
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="text-muted-foreground">
-                      {MONTH_NAMES[cfMonth]} {cfYear}: <span className="text-foreground font-semibold">{confirmedBookings.length}</span> booking
-                    </span>
-                    <span className="text-muted-foreground">
-                      Total: <span className="text-primary font-semibold">{formatIDR(confirmedTotal)}</span>
-                    </span>
-                  </div>
-                )}
               </div>
             )}
 
             {/* Booking list */}
-            {filter === "confirmed" && !confirmedLoaded ? (
-              <div className="text-center py-12">
-                <div className="inline-flex flex-col items-center gap-2">
-                  <Search className="w-8 h-8 text-muted-foreground/50" />
-                  <p className="text-muted-foreground text-sm">Pilih bulan dan tahun, lalu klik <span className="font-medium text-foreground">Tampilkan</span></p>
-                </div>
-              </div>
-            ) : loading && filter !== "confirmed" ? (
+            {loading && filter !== "confirmed" ? (
               <p className="text-center text-muted-foreground py-12">Memuat...</p>
             ) : confirmedLoading ? (
               <p className="text-center text-muted-foreground py-12">Memuat...</p>
