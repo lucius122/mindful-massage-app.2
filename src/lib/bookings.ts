@@ -4,13 +4,13 @@ export const PACKAGES: { id: PackageId; name: string; price: number; desc: strin
   {
     id: "pijat-capek",
     name: "Pijat Capek",
-    price: 75000,
+    price: 50000,
     desc: "Meredakan pegal di punggung, bahu, dan kaki setelah seharian beraktivitas.",
   },
   {
     id: "pijat-bayi",
     name: "Pijat Bayi",
-    price: 50000,
+    price: 35000,
     desc: "Pijat lembut untuk mendukung tumbuh kembang dan kenyamanan si kecil.",
   },
   {
