@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 import { formatIDR } from "@/lib/bookings";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { MessageCircle, Check, X, Clock, MapPin, Home as HomeIcon, LogOut } from "lucide-react";
+import { MessageCircle, Check, X, Clock, MapPin, Home as HomeIcon, LogOut, ChevronDown, Search } from "lucide-react";
 
 type Booking = {
   id: string;
@@ -33,12 +33,22 @@ type BookingLog = {
 
 type LogFilter = "today" | "all";
 
+const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
 export default function AdminPage() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filter, setFilter] = useState<Filter>("pending");
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"booking" | "riwayat">("booking");
+
+  // Confirmed month/year filter
+  const now = new Date();
+  const [cfMonth, setCfMonth] = useState(now.getMonth()); // 0-11
+  const [cfYear, setCfYear] = useState(now.getFullYear());
+  const [confirmedBookings, setConfirmedBookings] = useState<Booking[]>([]);
+  const [confirmedLoaded, setConfirmedLoaded] = useState(false);
+  const [confirmedLoading, setConfirmedLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -52,6 +62,7 @@ export default function AdminPage() {
 
   useEffect(() => { document.title = "Admin — Pijat Bunda WIN"; }, []);
 
+  // Load non-confirmed bookings (pending, cancelled) + counts
   useEffect(() => {
     const load = async () => {
       const { data, error } = await supabase
@@ -68,6 +79,35 @@ export default function AdminPage() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  // Load confirmed bookings by month/year on demand
+  const loadConfirmed = useCallback(async () => {
+    setConfirmedLoading(true);
+    const startDate = `${cfYear}-${String(cfMonth + 1).padStart(2, "0")}-01`;
+    const endMonth = cfMonth === 11 ? 0 : cfMonth + 1;
+    const endYear = cfMonth === 11 ? cfYear + 1 : cfYear;
+    const endDate = `${endYear}-${String(endMonth + 1).padStart(2, "0")}-01`;
+    const { data, error } = await supabase
+      .from("bookings").select("*")
+      .eq("status", "confirmed")
+      .gte("booking_date", startDate)
+      .lt("booking_date", endDate)
+      .order("booking_date", { ascending: true })
+      .order("booking_time", { ascending: true });
+    if (error) {
+      toast.error("Gagal memuat data dikonfirmasi");
+    } else {
+      setConfirmedBookings((data ?? []) as Booking[]);
+    }
+    setConfirmedLoaded(true);
+    setConfirmedLoading(false);
+  }, [cfMonth, cfYear]);
+
+  // Reset confirmed data when month/year changes
+  useEffect(() => {
+    setConfirmedLoaded(false);
+    setConfirmedBookings([]);
+  }, [cfMonth, cfYear]);
+
   const updateStatus = async (id: string, status: "confirmed" | "cancelled") => {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) toast.error("Gagal memperbarui status");
@@ -83,8 +123,7 @@ export default function AdminPage() {
     if (diffDays === 0) return "Hari ini";
     if (diffDays === 1) return "Besok";
     const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    return `${days[target.getDay()]}, ${target.getDate()} ${months[target.getMonth()]} ${target.getFullYear()}`;
+    return `${days[target.getDay()]}, ${target.getDate()} ${MONTH_NAMES[target.getMonth()]} ${target.getFullYear()}`;
   };
 
   const waLink = (b: Booking) => {
@@ -95,7 +134,18 @@ export default function AdminPage() {
     return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
   };
 
-  const filtered = filter === "all" ? bookings : bookings.filter((b) => b.status === filter);
+  const filtered = filter === "confirmed"
+    ? confirmedBookings
+    : filter === "all"
+    ? bookings
+    : bookings.filter((b) => b.status === filter);
+
+  // Generate year options (2024 to current year + 1)
+  const yearOptions: number[] = [];
+  for (let y = 2024; y <= now.getFullYear() + 1; y++) yearOptions.push(y);
+
+  // Calculate confirmed total for the loaded month
+  const confirmedTotal = confirmedBookings.reduce((sum, b) => sum + b.total_price, 0);
 
   if (session === undefined) {
     return (
@@ -153,7 +203,7 @@ export default function AdminPage() {
                 }`}
               >
                 {f === "all" ? "Semua" : f === "pending" ? "Menunggu" : f === "confirmed" ? "Dikonfirmasi" : "Dibatalkan"}
-                {" "}({f === "all" ? bookings.length : bookings.filter((b) => b.status === f).length})
+                {" "}({f === "all" ? bookings.length : f === "confirmed" && confirmedLoaded ? confirmedBookings.length : bookings.filter((b) => b.status === f).length})
               </button>
             ))}
           </div>
@@ -163,53 +213,117 @@ export default function AdminPage() {
       <main className="max-w-3xl mx-auto px-4 py-5 space-y-3">
         {tab === "riwayat" ? (
           <LogFeed />
-        ) : loading ? (
-          <p className="text-center text-muted-foreground py-12">Memuat...</p>
-        ) : filtered.length === 0 ? (
-          <p className="text-center text-muted-foreground py-12">Tidak ada booking.</p>
         ) : (
-          filtered.map((b) => (
-            <article key={b.id} className="bg-card rounded-lg p-4 border border-border">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-medium text-base">{b.customer_name}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{b.whatsapp_number}</p>
+          <>
+            {/* Month/Year picker for confirmed tab */}
+            {filter === "confirmed" && (
+              <div className="bg-card rounded-lg p-4 border border-border space-y-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="relative">
+                    <select
+                      value={cfMonth}
+                      onChange={(e) => setCfMonth(Number(e.target.value))}
+                      className="appearance-none pl-3 pr-8 py-2 rounded-lg border border-border bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                    >
+                      {MONTH_NAMES.map((m, i) => (
+                        <option key={i} value={i}>{m}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+                  </div>
+                  <div className="relative">
+                    <select
+                      value={cfYear}
+                      onChange={(e) => setCfYear(Number(e.target.value))}
+                      className="appearance-none pl-3 pr-8 py-2 rounded-lg border border-border bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                    >
+                      {yearOptions.map((y) => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+                  </div>
+                  <button
+                    onClick={loadConfirmed}
+                    disabled={confirmedLoading}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition disabled:opacity-50"
+                  >
+                    <Search className="w-4 h-4" />
+                    {confirmedLoading ? "Memuat..." : "Tampilkan"}
+                  </button>
                 </div>
-                <StatusPill status={b.status} />
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                <div><div className="text-xs text-muted-foreground">Paket</div><div className="font-medium">{b.package_name}</div></div>
-                <div><div className="text-xs text-muted-foreground">Total</div><div className="font-medium text-primary">{formatIDR(b.total_price)}</div></div>
-                <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Clock className="w-3.5 h-3.5" /> {formatBookingDate(b.booking_date)} • {b.booking_time}</div>
-                <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-                  {b.service_type.includes("Rumah") ? <HomeIcon className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}{b.service_type}
-                </div>
-              </div>
-              {b.address && (
-                <div className="mt-3 p-2.5 rounded-md bg-muted text-xs text-muted-foreground">
-                  <span className="text-foreground font-medium">Alamat: </span>{b.address}
-                </div>
-              )}
-              <div className="mt-4 flex flex-wrap gap-2">
-                <a href={waLink(b)} target="_blank" rel="noreferrer"
-                  className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-success text-success-foreground text-sm font-medium hover:opacity-90 transition">
-                  <MessageCircle className="w-4 h-4" /> Hubungi Pelanggan
-                </a>
-                {b.status === "pending" && (
-                  <>
-                    <button onClick={() => updateStatus(b.id, "confirmed")}
-                      className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition">
-                      <Check className="w-4 h-4" /> Konfirmasi
-                    </button>
-                    <button onClick={() => updateStatus(b.id, "cancelled")}
-                      className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:opacity-90 transition">
-                      <X className="w-4 h-4" /> Batalkan
-                    </button>
-                  </>
+                {confirmedLoaded && (
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-muted-foreground">
+                      {MONTH_NAMES[cfMonth]} {cfYear}: <span className="text-foreground font-semibold">{confirmedBookings.length}</span> booking
+                    </span>
+                    <span className="text-muted-foreground">
+                      Total: <span className="text-primary font-semibold">{formatIDR(confirmedTotal)}</span>
+                    </span>
+                  </div>
                 )}
               </div>
-            </article>
-          ))
+            )}
+
+            {/* Booking list */}
+            {filter === "confirmed" && !confirmedLoaded ? (
+              <div className="text-center py-12">
+                <div className="inline-flex flex-col items-center gap-2">
+                  <Search className="w-8 h-8 text-muted-foreground/50" />
+                  <p className="text-muted-foreground text-sm">Pilih bulan dan tahun, lalu klik <span className="font-medium text-foreground">Tampilkan</span></p>
+                </div>
+              </div>
+            ) : loading && filter !== "confirmed" ? (
+              <p className="text-center text-muted-foreground py-12">Memuat...</p>
+            ) : confirmedLoading ? (
+              <p className="text-center text-muted-foreground py-12">Memuat...</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-center text-muted-foreground py-12">Tidak ada booking.</p>
+            ) : (
+              filtered.map((b) => (
+                <article key={b.id} className="bg-card rounded-lg p-4 border border-border">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-medium text-base">{b.customer_name}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{b.whatsapp_number}</p>
+                    </div>
+                    <StatusPill status={b.status} />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div><div className="text-xs text-muted-foreground">Paket</div><div className="font-medium">{b.package_name}</div></div>
+                    <div><div className="text-xs text-muted-foreground">Total</div><div className="font-medium text-primary">{formatIDR(b.total_price)}</div></div>
+                    <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Clock className="w-3.5 h-3.5" /> {formatBookingDate(b.booking_date)} • {b.booking_time}</div>
+                    <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                      {b.service_type.includes("Rumah") ? <HomeIcon className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}{b.service_type}
+                    </div>
+                  </div>
+                  {b.address && (
+                    <div className="mt-3 p-2.5 rounded-md bg-muted text-xs text-muted-foreground">
+                      <span className="text-foreground font-medium">Alamat: </span>{b.address}
+                    </div>
+                  )}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <a href={waLink(b)} target="_blank" rel="noreferrer"
+                      className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-success text-success-foreground text-sm font-medium hover:opacity-90 transition">
+                      <MessageCircle className="w-4 h-4" /> Hubungi Pelanggan
+                    </a>
+                    {b.status === "pending" && (
+                      <>
+                        <button onClick={() => updateStatus(b.id, "confirmed")}
+                          className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition">
+                          <Check className="w-4 h-4" /> Konfirmasi
+                        </button>
+                        <button onClick={() => updateStatus(b.id, "cancelled")}
+                          className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:opacity-90 transition">
+                          <X className="w-4 h-4" /> Batalkan
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </article>
+              ))
+            )}
+          </>
         )}
       </main>
       <Toaster />
